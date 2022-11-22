@@ -72,12 +72,13 @@ saveRDS(heroes_raw, file = "hero_map.RData")
 
 library(jsonlite)
 library(httr)
+library(scales)
 library(plyr)
 library(tidyverse)
 library(wrapr)
 library(lubridate)
 
-######## PHASE ONE: WHICH HEROES WERE PLAYED/BANNED MOST? #############
+## PHASE ONE - GETTING THE DATA INTO SHAPE ##
 
 ## First, I'll call up the TI 11 draft data I downloaded from the OpenDota
 ## API as described in the preamble.
@@ -144,24 +145,32 @@ all_drafts <- subset(all_drafts, select = -ord)
 
 rename(all_drafts, pick = order)
 
+## The draft occurs over distinct "phases," which it will be good to demarkate
+## for later analyses.
+
+phases_raw <- c(rep("ban_1", 4), rep("pick_1", 4), rep("ban_2", 6), rep("pick_2", 4)
+                , rep("ban_3", 4), rep("pick_3"), 2)
+
+phases <- c()
+
 ## Finally, it will be important to know which team won each match, so let's
 ## create a variable for which side corresponds to each pick, as well as which
 ## side ultimately won each match.
 
-winning_teams_raw <- c()
+winning_sides_raw <- c()
 
 for (i in 1:231) {
-  winning_teams_raw[i] <- ifelse(ti_11_match_data[[i]]$Radiant_Win == TRUE,
+  winning_sides_raw[i] <- ifelse(ti_11_match_data[[i]]$Radiant_Win == TRUE,
                                  yes = "radiant", no = "dire")
 }
 
 winning_sides <- c()
 
 for (i in 1:231) {
-  winning_sides <- c(winning_teams, rep(winning_teams_raw[i], 24))
+  winning_sides <- c(winning_sides, rep(winning_sides_raw[i], 24))
 }
 
-all_drafts$winning_side <- winning_teams
+all_drafts$winning_side <- winning_sides
 
 side_pick <- c()
 
@@ -175,8 +184,10 @@ side_pick_names <- mapvalues(side_pick, rad_dire, names(rad_dire))
 
 all_drafts$pick_side <- side_pick_names
 
-all_drafts$result <- ifelse(all_drafts$pick_side == all_drafts$winning_team,
+all_drafts$result <- ifelse(all_drafts$pick_side == all_drafts$winning_side,
                             1, 0)
+
+######## PHASE TWO: OVERALL MOST PICKED/SUCCESSFUL HEROES? #############
 
 ## Okay, I believe we're ready to do some analysis. First, let's just
 ## see how often each hero was contested overall.
@@ -215,10 +226,12 @@ all_drafts %>%
                        x = total_contested)
          ) +
     geom_bar(mapping = aes(x = banned), width = 0.42,
-             fill = "brown", stat = "identity", position = position_nudge(y = -0.21)
+             fill = "goldenrod4", stat = "identity",
+             position = position_nudge(y = -0.21)
              ) +
     geom_bar(mapping = aes(x = picked), width = 0.42,
-             fill = "blue", stat = "identity", position = position_nudge(y = 0.21)
+             fill = "deepskyblue2", stat = "identity",
+             position = position_nudge(y = 0.21)
              ) +
     theme(panel.background = element_rect(fill = "white", color = "grey75")) +
     labs(x = "Blue = Pick | Brown = Ban", y = NULL)
@@ -227,18 +240,29 @@ all_drafts %>%
 
 all_drafts %>%
   group_by(hero_name) %>%
-  summarize(appearances = sum(is_pick),
+  summarize(appearances = sum(is_pick), wins = sum(result[which(is_pick == 1)]),
             win_rate = (sum(result[which(is_pick == 1)])/sum(is_pick))
             ) %>%
   arrange(desc(appearances)) %>%
   slice(1:20) %>%
 
-  ggplot(mapping = aes(x = win_rate, y = reorder(hero_name, appearances))) +
-    geom_bar(stat = "identity", mapping = aes(fill = hero_name)) +
-    geom_text(mapping = aes(label = appearances,
-                            size = 3.65, hjust = 4.3, vjust = 0.35)) +
-    geom_text(mapping = aes(label = paste0("(", signif(win_rate, digits = 2), ")"),
-                            size = 3.65, hjust = 1.2, vjust = 0.35)
+  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
+    geom_bar(mapping = aes(x = win_rate)
+             , stat = "identity", fill = "powderblue"
+             ) +
+    geom_bar(mapping = aes(x = win_rate^2)
+             , stat = "identity", fill = "lightsalmon4"
+             ) +
+    geom_text(mapping = aes(x = win_rate, label = appearances, hjust = 1.3,
+                            vjust = 0.38
+                            )
+              , size = 3
+              ) +
+    geom_text(mapping = aes(x = win_rate^2, hjust = 1.1, vjust = 0.38,
+                    label = paste0(win_rate * appearances, " ", "(",
+                                  percent(win_rate, .1), ")"
+                                   )
+                            ), color = "white", size = 3
               ) +
     geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey50") +
     theme(legend.position = "none",
@@ -246,6 +270,40 @@ all_drafts %>%
           ) +
     labs(x = "Win Rate", y = NULL)
   
+## Picks are interesting but so are bans. Let's look at the win rate of teams
+## that banned each hero among the 20 most-banned heroes.
+
+all_drafts %>%
+  group_by(hero_name) %>%
+  summarize(total_bans = length(is_pick[which(is_pick == FALSE)]),
+    banner_win_rate =
+    (sum(result[which(is_pick == FALSE)]))/length(is_pick[which(is_pick == FALSE)])) %>%
+  arrange(desc(total_bans)) %>%
+  slice(1:20) %>%
+
+  ggplot(mapping = aes(y = reorder(hero_name, total_bans))) +
+    geom_bar(mapping = aes(x = banner_win_rate), stat = "identity",
+             fill = "khaki2"
+             ) +
+    geom_bar(mapping = aes(x = banner_win_rate^2), stat = "identity",
+             fill = "darkseagreen4"
+             ) +
+    geom_text(mapping = aes(banner_win_rate, label = total_bans, hjust = 1.5
+                            , vjust = 0.25)
+              , size = 3
+              ) +
+    geom_text(mapping = aes(banner_win_rate^2,
+        label = paste0(total_bans*banner_win_rate, " ", "(", 
+                       percent(banner_win_rate, 0.1), ")")
+              , hjust = 1.2, vjust = 0.25
+              ), color = "white", size = 3
+              ) +
+    geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey50") +
+    theme(legend.position = "none",
+        panel.background = element_rect(fill = "white", color = "grey75")
+          ) +
+    labs(x = "Banner Win Rate", y = NULL)
+
 ## EXPERIMENTAL ZONE
 
 ti_data_raw <- GET("https://api.opendota.com/api/matches/6815355000",
