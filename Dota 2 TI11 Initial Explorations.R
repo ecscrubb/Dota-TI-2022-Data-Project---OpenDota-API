@@ -151,11 +151,14 @@ rename(all_drafts, pick = order)
 phases_raw <- c(rep("ban_1", 4), rep("pick_1", 4), rep("ban_2", 6), rep("pick_2", 4)
                 , rep("ban_3", 4), rep("pick_3"), 2)
 
-phases <- c()
+phases <- rep(phases_raw, 231)
+
+all_drafts$phase <- phases
 
 ## Finally, it will be important to know which team won each match, so let's
 ## create a variable for which side corresponds to each pick, as well as which
-## side ultimately won each match.
+## side ultimately won each match, and the team name of the team that played
+## that side for each match.
 
 winning_sides_raw <- c()
 
@@ -187,6 +190,24 @@ all_drafts$pick_side <- side_pick_names
 all_drafts$result <- ifelse(all_drafts$pick_side == all_drafts$winning_side,
                             1, 0)
 
+dire_teams <- c()
+radiant_teams <- c()
+
+for (i in 1:231) {
+  dire_teams <- c(dire_teams, rep(ti_11_match_data[[i]]$Dire_Team$name, 24))
+  radiant_teams <- c(radiant_teams, rep(ti_11_match_data[[i]]$Radiant_Team$name, 24))
+}
+
+all_drafts$dire_team <- dire_teams
+all_drafts$radiant_team <- radiant_teams
+
+for (i in 1:5544) {
+  if (all_drafts$pick_side[i] == "dire") {
+      all_drafts$pick_team[i] <- all_drafts$dire_team[i]
+                                        }
+  else (all_drafts$pick_team[i] <- all_drafts$radiant_team[i])
+}
+
 ######## PHASE TWO: OVERALL MOST PICKED/SUCCESSFUL HEROES? #############
 
 ## Okay, I believe we're ready to do some analysis. First, let's just
@@ -210,6 +231,28 @@ all_drafts %>%
           panel.background = element_rect(fill = "white",
                                           color = "grey75")
           )
+
+## Now, let's check the average draft position of the most-contested heroes.
+
+all_drafts %>%
+  group_by(hero_name) %>%
+  summarize(total_contested = n(), avg_pos = median(order, na.rm = TRUE)) %>%
+  arrange(desc(total_contested)) %>%
+  slice(1:25) %>%
+  filter(avg_pos < 13) %>%
+  arrange(avg_pos)
+  
+  ggplot(mapping = aes(x = total_contested, y = avg_pos)) +
+    geom_point(mapping = aes(color = hero_name, size = total_contested)) +
+    geom_text(mapping = aes(label = hero_name, color = hero_name)
+              , nudge_y = 0.7, size = 3
+              ) +
+    theme(legend.position = "none"
+          , panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          ) +
+    labs(x = "Total Picks/Bans", y = "Average Draft Position")
 
 ## Next, let's differentiate between picks and bans
 
@@ -304,11 +347,131 @@ all_drafts %>%
           ) +
     labs(x = "Banner Win Rate", y = NULL)
 
+## Now, let's see how much heroes' win rates changed over time. Due to the nature
+## of elimination-style tournaments, there were fewer matches on later matchdays,
+## so I'm going to lump matches into three categories: days 1-2, days 3-4,
+## and days 5-8. I'll ignore days 9-10 for now.
+
+## Days 1-2
+
+all_drafts %>%
+  filter(is_pick == 1 & matchday %in% (1:8)) %>%
+  mutate(tourn_phase = case_when(
+      matchday %in% (1:2) ~ 1
+      , matchday %in% (3:4) ~ 2
+      , matchday %in% (5:8) ~ 3
+      )
+      ) %>%
+  group_by(hero_name, tourn_phase) %>%
+  summarize(appearances = sum(is_pick), win_rate = mean(result)) %>%
+  filter(tourn_phase == 1) %>%
+  ungroup() %>%
+  arrange(desc(appearances)) %>%
+  slice(1:20) %>%
+
+  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
+    geom_bar(mapping = aes(x = appearances), fill = "mistyrose2",
+             stat = "identity"
+            ) +
+    geom_bar(mapping = aes(x = win_rate * appearances), fill = "lightsteelblue4",
+             stat = "identity") +
+    geom_text(mapping = aes(appearances, label = appearances, hjust = 1.5
+                            , vjust = 0.2)
+              , size = 3
+              ) +
+    geom_text(mapping = aes(win_rate * appearances,
+        label = paste0((win_rate * appearances), " ", "("
+                       , percent(win_rate, 0.1), ")"
+                       )
+                            , vjust = 0.25, hjust = 1.2
+                            )
+              , size = 3, color = "white"
+              ) +
+    theme(legend.position = "none",
+          panel.background = element_rect(fill = "white", color = "grey75")
+          )
+
+## Days 3-4
+
+all_drafts %>%
+  filter(is_pick == 1 & matchday %in% (1:8)) %>%
+  mutate(tourn_phase = case_when(
+    matchday %in% (1:2) ~ 1
+    , matchday %in% (3:4) ~ 2
+    , matchday %in% (5:8) ~ 3
+                                )
+        ) %>%
+  group_by(hero_name, tourn_phase) %>%
+  summarize(appearances = sum(is_pick), win_rate = mean(result)) %>%
+  filter(tourn_phase == 2) %>%
+  ungroup() %>%
+  arrange(desc(appearances)) %>%
+  slice(1:20) %>%
+  
+  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
+  geom_bar(mapping = aes(x = appearances), fill = "wheat",
+           stat = "identity"
+          ) +
+  geom_bar(mapping = aes(x = win_rate * appearances), fill = "tomato4",
+           stat = "identity"
+           ) +
+  geom_text(mapping = aes(appearances, label = appearances, hjust = 1.5
+                          , vjust = 0.2)
+            , size = 3
+          ) +
+  geom_text(mapping = aes(win_rate * appearances,
+                          label = paste0((win_rate * appearances), " ", "("
+                                         , percent(win_rate, 0.1), ")"
+                          ), vjust = 0.25, hjust = 1.2
+                          )
+            , size = 3, color = "white"
+            ) +
+  theme(legend.position = "none",
+        panel.background = element_rect(fill = "white", color = "grey75")
+        )
+
+## Days 5-8
+
+all_drafts %>%
+  filter(is_pick == 1 & matchday %in% (1:8)) %>%
+  mutate(tourn_phase = case_when(
+    matchday %in% (1:2) ~ 1
+    , matchday %in% (3:4) ~ 2
+    , matchday %in% (5:8) ~ 3
+                                )
+        ) %>%
+  group_by(hero_name, tourn_phase) %>%
+  summarize(appearances = sum(is_pick), win_rate = mean(result)) %>%
+  filter(tourn_phase == 3) %>%
+  ungroup() %>%
+  arrange(desc(appearances)) %>%
+  slice(1:20) %>%
+  
+  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
+  geom_bar(mapping = aes(x = appearances), fill = "lightcyan2",
+           stat = "identity"
+          ) +
+  geom_bar(mapping = aes(x = win_rate * appearances), fill = "royalblue4",
+           stat = "identity"
+           ) +
+  geom_text(mapping = aes(appearances, label = appearances, hjust = 1.5
+                          , vjust = 0.2
+                          ), size = 3
+            ) +
+  geom_text(mapping = aes(win_rate * appearances,
+                          label = paste0((win_rate * appearances), " ", "("
+                                         , percent(win_rate, 0.1), ")")
+                          , vjust = 0.25, hjust = 1.2
+                          ), size = 3, color = "white"
+            ) +
+  theme(legend.position = "none",
+        panel.background = element_rect(fill = "white", color = "grey75")
+        )
+
 ## EXPERIMENTAL ZONE
 
-ti_data_raw <- GET("https://api.opendota.com/api/matches/6815355000",
-                   query = query_key)
-
-ti_data <- fromJSON(rawToChar(ti_data_raw$content))
+all_drafts %>%
+  group_by(matchday) %>%
+  summarize(n())
 
 ## END EXPERIMENTAL ZONE

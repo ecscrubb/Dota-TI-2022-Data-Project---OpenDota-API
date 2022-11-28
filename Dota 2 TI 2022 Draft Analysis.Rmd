@@ -1,0 +1,12 @@
+---
+title: "Dota 2 TI11 Draft Analysis"
+author: "Dave Whitsett"
+date: "`r Sys.Date()`"
+output: pdf_document
+    
+---
+# Introduction to Dota 2
+
+Dota 2 is a real-time strategy game game played online between two teams of five players each. Winning requires both long-term strategy and quick in-game decision-making, the combination of which is very attractive to people who, like me, love the intellectual challenge of pitting their wits against others on the strategic battlefield but find "pure" strategy games like chess a bit too slow-paced.
+
+I won't go into an in-depth description of gameplay (those interested can find [a good summary by IGN here](https://www.ign.com/wikis/dota-2/Game_Overview) ), but a few words about the basic structure of the game will help explain why it's especially interesting from a data analytic point of view. The name "Dota" is an acronym for "Defense Of The Ancient." The "Ancient" referred to in the name is a giant structure in the middle of each team's base. The "Dire" (red) team's Ancient is in the top-right corner of the map and the "Radiant" (green) team's Ancient is in the bottom-left corner. The goal of the game is to destroy the other team's Ancient before they destroy yours. Standing in the way of this goal are a series of towers - durable buildings that do heavy damage to anything that comes within range - as well as less-powerful minions that spawn regularly and behave predictably, and of course the opposing team. The map on which the games take place is always the same, and a simplified version is shown below.
