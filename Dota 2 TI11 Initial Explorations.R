@@ -279,39 +279,40 @@ all_drafts %>%
     theme(panel.background = element_rect(fill = "white", color = "grey75")) +
     labs(x = "Blue = Pick | Brown = Ban", y = NULL)
 
-## Now, let's look at win rates of the 20 heroes who appeared in the most matches.
+## Now, let's look at win rates of the 25 heroes who appeared in the most matches.
 
 all_drafts %>%
   group_by(hero_name) %>%
   summarize(appearances = sum(is_pick), wins = sum(result[which(is_pick == 1)]),
             win_rate = (sum(result[which(is_pick == 1)])/sum(is_pick))
-            ) %>%
+  ) %>%
   arrange(desc(appearances)) %>%
   slice(1:20) %>%
-
+  
   ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
-    geom_bar(mapping = aes(x = win_rate)
-             , stat = "identity", fill = "powderblue"
-             ) +
-    geom_bar(mapping = aes(x = win_rate^2)
-             , stat = "identity", fill = "lightsalmon4"
-             ) +
-    geom_text(mapping = aes(x = win_rate, label = appearances, hjust = 1.3,
-                            vjust = 0.38
-                            )
-              , size = 3
-              ) +
-    geom_text(mapping = aes(x = win_rate^2, hjust = 1.1, vjust = 0.38,
-                    label = paste0(win_rate * appearances, " ", "(",
-                                  percent(win_rate, .1), ")"
-                                   )
-                            ), color = "white", size = 3
-              ) +
-    geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey50") +
-    theme(legend.position = "none",
-          panel.background = element_rect(fill = "white", color = "grey75")
-          ) +
-    labs(x = "Win Rate", y = NULL)
+  geom_bar(mapping = aes(x = appearances)
+           , stat = "identity", fill = "powderblue"
+  ) +
+  geom_bar(mapping = aes(x = appearances*win_rate)
+           , stat = "identity", fill = "lightsalmon4"
+  ) +
+  geom_text(mapping = aes(x = appearances, label = appearances, hjust = 1.3,
+                          vjust = 0.38
+  )
+  , size = 3
+  ) +
+  geom_text(mapping = aes(x = win_rate*appearances, hjust = 1.1, vjust = 0.38,
+                          label = paste0(win_rate * appearances, " ", "(",
+                                         percent(win_rate, .1), ")"
+                          )
+  ), color = "white", size = 3
+  ) +
+  theme(legend.position = "none"
+        , panel.background = element_rect(fill = "white", color = "grey75")
+        , axis.title.x = element_text(color = "grey25", size = 10)
+        , axis.title.y = element_text(color = "grey25", size = 10)
+  ) +
+  labs(x = "Wins (Win Rate) vs Total Appearances", y = NULL)
   
 ## Picks are interesting but so are bans. Let's look at the win rate of teams
 ## that banned each hero among the 20 most-banned heroes.

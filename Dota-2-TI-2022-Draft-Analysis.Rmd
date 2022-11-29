@@ -150,9 +150,9 @@ for (i in 1:5544) {
 
 ```
 
-# Part One: Introduction to Dota 2
+# Part 1: Introduction to Dota 2
 
-## The Basics
+## 1.1 The Basics
 
 Dota 2 is a real-time strategy game game played online between two teams of five players each. Winning requires both long-term strategy and quick in-game decision-making, the combination of which is very attractive to people who, like me, love the intellectual challenge of pitting their wits against others on the strategic battlefield but find "pure" strategy games like chess a bit too slow-paced.
 
@@ -162,11 +162,11 @@ I won't go into an in-depth description of gameplay (those interested can find [
 
 ![*Dota 2 Minimap (courtesy* [RepostIsNotOk](https://www.reddit.com/r/DotA2/comments/39pyiw/dota_2_handy_map_made_an_updated_version_hope_it/))](Dota_2_TI_11_Project_Images/Dota_2_Minimap.png){width=85%}
 
-## Heroes, Items, and "The Meta"
+## 1.2 Heroes, Items, and "The Meta"
 
 The map, goal, and minions are always the same, and relatively straightforward. The complexity of Dota 2 comes from which **heroes** each team selects and the **items** those heroes buy to give them certain powers. Each player controls one hero, and each hero comes with an innate set of attributes (health, speed, magic, damage, etc.) and abilities (spells, auras, passive bonuses, etc.) that can be leveled up as the hero participates in battle with minions and opposing heroes. Killing minions and opposing heroes also grants gold, which enables heroes to buy items, which convey bonuses to the hero/team that equips them. As of the time of writing in late 2022, there are 123 heroes, each with its own innate set of attributes and abilities, and 208 items, each of which provides its own benefits (and sometimes weaknesses). Since each *individual* hero can be played in a wide variety of ways (different skill focuses, different item builds) and the number of possible 5-hero *team* compositions is so high, there is a very wide range of potential strategies for players to pursue in their effort to destroy the other team's towers and ancients. And since Dota 2 is regularly "patched," with heroes' abilities and items' prices being adjusted, new heroes and items being added, the map being tweaked, etc., the "meta," or relative strength of different strategies, is always changing.
 
-## The Draft
+## 1.3 The Draft
 
 A final wrinkle to fold into these layers of complexity is the ability to *ban* heroes. In casual public matches, each team can propose up to 5 heroes to ban entirely from the hero pool. The rest are available for selection on a first-come, first-served basis. In professional matches, this process is handled through the draft. The draft takes place *before* the map shown above even appears. It is a strategic selection process through which teams maneuver to get the heroes they want and - often just as important - prevent the other team from getting the heroes *they* want. There are six phases of the draft overall - three banning phases (where each team selects a couple heroes *nobody* is allowed to pick) and three picking phases (where each team takes turn picking *their own* heroes). This is the aspect of Dota 2 strategy I will be focusing on in my analysis for this project.
 
@@ -174,19 +174,21 @@ A final wrinkle to fold into these layers of complexity is the ability to *ban* 
 
 I will say more about drafting strategy as we work through the data together, but it seems wise to make a few preliminary notes. First, in professional games there are more *bans* than *picks,* and the first banning phase precedes the first picking phase. Second, the wide array of hero styles and game strategies available in Dota 2 mean that there are many opportunities for teams to counter the heroes the other team picks early in the draft. Together, this means that (a) there is a high premium on flexible, "all-around" heroes early in the draft and (b) we shouldn't expect the win rate for heroes who are almost always picked early in the draft to be much higher than 50\%. This is because, even if those heroes really *are* among the most powerful heroes in the "meta," the availability of so many picks and bans following their selection early in the draft gives them a higher hill to climb than heroes picked later in the draft, which teams can do less to counter. It also means that (c) in general, we should expect the heroes teams think most powerful to be banned more often than they are picked. This is simply because teams have more bans than picks, especially early in the draft where, by the end of the second banning phase, each team will have banned five heroes while only picking two.
 
-## The International
+## 1.4 The International
 
 Every year, there is a large international tournament, aptly named "The International," or just "TI" for short, where the best Dota 2 teams in the world meet and vie for the title of best in the world (as well as for an [enormous lump of cash](https://www.statista.com/statistics/749033/dota-2-championships-prize-pool/)). This year (2022), 20 teams were involved in The International, which took place over two phases - the Group Phase and the Main Event. In the Group Phase, teams were divided into two groups of ten teams, and each team within each group played every other team twice. For the Main Event, the top four teams from each group moved on to start in the Upper Bracket of a double-elimination tournament of best-of-three matches, the next four teams started in the Lower Bracket, and the bottom two teams were eliminated. By the end of the tournament, 231 games had been played in total.
 
-Since there are so many matches between the very best players in the world, The International represents a unique opportunity to use data to analyze the current "meta." That is the aim of this project.
+Because Dota is so complex, it is not easy even for the pros to discover a "dominant" strategy or set of strategies. Doing so requires teams to play a large number of matches in a given patch. Moreover, professional teams have an incentive to hide the strategies they think are the best from other pro teams until they compete in a prestigious tournament since the element of surprise is so valuable. Because of its immense prestige, elite skill level and enormous prize pool, The International offers the most likely scene for the most-dominant strategies to be developed and/or unveiled. And since there are so many matches, with data automatically captured for every match and stored in [OpenDota's API](https://docs.opendota.com/), The International represents a unique opportunity to use data to analyze the current "meta." That is the aim of this project.
 
-# Part Two: Analysis of Overall Trends
+# Part 2: Analysis of Overall Trends
 
 I'll start by just summarizing a few of the overall trends over the course of the tournament as a whole. After that, I'll go into more depth analyzing trends over time and pursuing whatever questions seem interesting given our first glance at the overall trends.
 
-## Most Contested Heroes
+## 2.1 Most Contested Heroes
 
-In Dota 2, the term "contested" is an all-inclusive category meaning "picked OR banned." The most contested heroes are likely to be the heroes teams thought were the most powerful overall, as well as the most flexible. As such, the average draft position of the most-contested heroes should also be early, since the most flexible and powerful heroes are likely to be picked before those heroes whose utility is more situational. As the graphics below show, this is exactly the case. The first graphic shows how often the 25 most-contested heroes were picked or banned, while the second graphic shows the average draft position and total picks/bans of each of those heroes. As the second graphic illustrates, the more a hero was picked, on average (that is, the farther right it appears on the graph), the lower its average draft position (that is, the farther down it appears on the graph). If we think of the draft in terms of phases (which most analysts do), the median draft position of 9 heroes is below 8, which means those heroes were either first-phase banned or first-phase picked in the majority of the matches in which they were contested. An additional 10 heroes' median draft position is below 13, which means they were generally either picked or banned before the second picking phase began.
+In Dota 2, the term "contested" is an all-inclusive category meaning "picked OR banned." The most contested heroes are likely to be the heroes teams thought were the most powerful overall, as well as the most flexible. As such, the average draft position of many the most-contested heroes should also be early, since the most flexible and powerful heroes are likely to be picked or banned before those heroes whose utility is more situational, and could easily be countered by later picks and bans.
+
+As the graphics below show, this is exactly the case. The first graphic shows how often the 25 most-contested heroes were picked or banned, while the second graphic shows the average draft position and total picks/bans of each of those heroes. As the second graphic illustrates, the more a hero was picked, on average (that is, the farther right it appears on the graph), the lower its average draft position (that is, the farther down it appears on the graph). If we think of the draft in terms of phases (which most analysts do), the median draft position of nine heroes is less than eight, which means those heroes were either first-phase banned or first-phase picked in the majority of the matches in which they were contested. An additional 10 heroes' median draft position is below 13, which means they were generally either picked or banned before the second picking phase began.
 
 &nbsp;  
 
@@ -194,18 +196,26 @@ In Dota 2, the term "contested" is an all-inclusive category meaning "picked OR 
 
 all_drafts %>%
   group_by(hero_name) %>%
-  summarize(total_contested = n()) %>%
+  summarize(total_contested = n(), appearances = sum(is_pick)) %>%
   arrange(desc(total_contested)) %>%
   slice(1:25) %>%
 
-  ggplot(mapping = aes(x = total_contested,
-                       y = reorder(hero_name, total_contested)
+  ggplot(mapping = aes(y = reorder(hero_name, total_contested)
                       )
          ) +
-    geom_bar(mapping = aes(fill = hero_name),stat = "identity") +
-    geom_text(mapping = aes(label = total_contested),
-              size = 3, hjust = 2, vjust = 0.35) +
-    labs(x = "TI 2022 - Total Picks/Bans", y = NULL) +
+    geom_bar(mapping = aes(x = total_contested), stat = "identity"
+             , fill = "gold") +
+    geom_bar(mapping = aes(x = appearances), stat = "identity"
+             , fill = "gray30") +
+    geom_text(mapping = aes(label = paste0(total_contested - appearances
+                                          , " (", total_contested, ")"
+                                          )
+                            , x = total_contested
+                            )
+              , size = 2.5, hjust = 1.1, vjust = 0.4) +
+    geom_text(mapping = aes(label = appearances, x = appearances)
+              , size = 2.5, hjust = 1.3, vjust = 0.45, color = "white") +
+    labs(x = "Picks vs Bans (Total Contestation)", y = NULL) +
     theme(legend.position = "none",
           panel.background = element_rect(fill = "white",
                                           color = "white"
@@ -228,7 +238,7 @@ all_drafts %>%
   ggplot(mapping = aes(x = total_contested, y = avg_pos)) +
     geom_point(mapping = aes(color = hero_name)) +
     geom_text(mapping = aes(label = hero_name, color = hero_name)
-              , nudge_y = 0.7, size = 3.5
+              , nudge_y = 0.7, size = 3.2
               ) +
     theme(legend.position = "none"
           , panel.background = element_rect(fill = "white"
@@ -237,6 +247,127 @@ all_drafts %>%
           , axis.title.x = element_text(color = "grey25", size = 10)
           , axis.title.y = element_text(color = "grey25", size = 10)
           ) +
-    labs(x = "Total Picks/Bans", y = "Average Draft Position")
+    labs(x = "Total Contestation", y = "Average Draft Position")
+
+```
+
+A final point of interest is the relationship between hero *role* and draft position. Each of the five heroes on a given team has a unique role. Two heroes are "supports" (positions 4 and 5), which usually have all-around utility but do not scale into ultra-powerful heroes later in the game. The other heroes are "cores" (positions 1, 2, and 3) who scale better into the late game. Generally speaking, it is the job of the supports to take care of their cores in the early game so that they can scale into ultra-powerful heroes that ultimately take over the game and "carry" the team to victory. Due to the mechanics of the game and the nature of the draft, however, it is very difficult to guarantee that *all* the cores will be able to scale well. Teams can realistically only count on 1 or 2 of their cores to have a good enough early game to carry in the mid-to-late game. Because of this, teams usually wait to pick their key hero(es), or their "win condition(s)," until late in the draft. Usually, the win condition hero is played in position 1 or 2, though sometimes it can be position 3.
+
+What this means is that supports are likely to dominate the earliest *picks* in the draft, joined by only the most powerful and difficult-to-counter win condition heroes in the patch. The same is not necessarily true for *bans,* however. Because they usually do not have the potential to carry a game on their own, supports are not as feared as the most powerful cores. We should, therefore, expect to see supports dominate the early *picks* of the draft, but not necessarily the early *bans.* On the other hand, cores should often be *banned* early but *picked* late. The only exceptions to this rule should be the few heroes commonly thought to be *so* strong that they are nearly impossible to counter. In Dota 2 lingo, these heroes are "overpowered," or "OP." Let's look at the data and see if this is the case.
+
+```{r echo = FALSE, fig.height = 3.5}
+
+all_drafts %>%
+  group_by(hero_name) %>%
+  summarize(total_contested = n(), appearances = sum(is_pick)
+            , avg_pos = median(order, na.rm = TRUE)
+            ) %>%
+  arrange(desc(total_contested)) %>%
+  slice(1:25) %>%
+  arrange(avg_pos) %>%
+  
+  ggplot(mapping = aes(x = appearances/total_contested, y = avg_pos)) +
+    geom_point(mapping = aes(color = hero_name)) +
+    geom_text(mapping = aes(label = hero_name, color = hero_name)
+              , nudge_y = 0.7, size = 3.2
+              ) +
+    geom_vline(xintercept = 0.4167, linetype = 2, color = "grey75") +
+    theme(legend.position = "none"
+          , panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          ) +
+    labs(x = "Pick/Ban Ratio", y = "Average Draft Position")
+  
+
+```
+
+The plot above compares the pick/ban ratio of the 25 most-contested heroes with their average draft position. The farther right on the graph, the more the hero was picked (as opposed to banned). The higher up on the graph, the later that hero's average draft position. The dashed vertical line represents a pick/ban ratio of 0.4167. This is because there are 10 picks and 14 bans in a single draft, i.e. picks make up $10/24 = 0.4167$ of the draft. Thus, heroes to the left of the line are *more* likely to be banned than picked, proportional to the total available picks vs. bans, while those to the right are *less.*
+
+This plot clearly supports the hypotheses outlined above. All but one of the supports among the top-25 most-contested heroes (Snapfire, Silencer, Crystal Maiden, Tiny, Clockwerk, Nyx Assassin, Undying, and Marcy) fall to the right of the dashed line. The only "support" to the left is Primal Beast, who is often played as a core and only sometimes as a support. The majority of these supports also sport a low average draft position, with most being drafted before the 9th pick/ban (Snapfire is the only exception). Meanwhile, *all* the heroes to the left of the dashed line are cores, and most of them averaged a draft position later than the 9th pick/ban. In The International 2022, teams showed a strong propensity to *ban* cores early and *pick* them late, preferring to spend their early picks on supports.
+
+## 2.2 Win Rates of Most Contested Heroes
+
+Let's assume for now that the theory behind banning cores early and picking them late while picking supports early is sound (if I have time later, I'll put that question in the crosshairs). Even if so, did pros identify the *right* cores to ban vs. those to let through? Did they, in other words, successfully differentiate the cores that were most difficult to deal with from those who *could* be dealt with? If they did, we should expect the cores in the lower-left quadrant of the plot above to have a *higher* win rate than the cores in the lower-right quadrant. Let's see if that was the case.
+
+```{r echo = FALSE, fig.height = 3.5}
+
+all_drafts %>%
+  filter(hero_name %in% c("Visage", "Broodmother", "Enigma", "Primal Beast"
+                          , "Marci", "Shadow Fiend", "Leshrac"
+                          )
+         ) %>%
+  group_by(hero_name) %>%
+  summarize(wins = sum(result[which(is_pick == 1)]), appearances = sum(is_pick)
+            , win_rate = ((sum(result[which(is_pick == 1)]))/(sum(is_pick)))
+            ) %>%
+  arrange(desc(win_rate)) %>%
+  
+  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
+    geom_bar(mapping = aes(x = appearances), stat = "identity"
+             , fill = "lightblue2") +
+    geom_bar(mapping = aes(x = wins), stat = "identity"
+             , fill = "slateblue4") +
+    geom_text(mapping = aes(label = appearances, x = appearances
+                            , hjust = 1.5, vjust = 0.3)
+              , size = 3.5
+              ) +
+    geom_text(mapping = aes(label = paste0(wins, " (", percent(win_rate, 0.1)
+                                           , ")"
+                                           )
+                            , x = wins, hjust = 1.1, vjust = 0.3
+                            ), color = "white", size = 3.5
+              ) +
+    theme(legend.position = "none"
+          , panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          ) +
+    labs(x = "Wins (Win Rate) vs Total Appearances", y = NULL)
+
+```
+
+This chart indicates that pros' assessment of these heroes was a bit of a mixed bag. In a broad sense, it seems pros were generally right about the overall strength of these heroes, as most sport a 50\%\+ win rate - impressive for cores picked early in the draft with so many opportunities left for the opposing team to counter them. On the other hand, pros' tendency to ban Primal Beast in the early phases while letting Leshrac through seems to have been a mistake. Primal Beast was banned 125 times but ended the tournament with only a 47.76\% win rate. Meanwhile, Leshrac was banned 72 times and allowed to be drafted 77 times, and ended the tournament with a 57.14\% win rate.
+
+Of course, these are just broad, overall trends, which by themselves can't give us a well-rounded view of the tournament as a whole. More interesting insights will require us to do more fine-grained analysis. Two analytical paths seems especially interesting to me. One is examining the relationship of *draft phases* to heroes' win rate. The other is to identify pros' evolving understanding of and adaptation to the "meta" over the course of the tournament by examining *trends over time.* I will turn to these questions in the coming sections.
+
+```{r echo = FALSE, fig.height = 3.5}
+
+all_drafts %>%
+  group_by(hero_name) %>%
+  summarize(appearances = sum(is_pick), wins = sum(result[which(is_pick == 1)]),
+            win_rate = (sum(result[which(is_pick == 1)])/sum(is_pick))
+            ) %>%
+  arrange(desc(appearances)) %>%
+  slice(1:20) %>%
+
+  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
+    geom_bar(mapping = aes(x = appearances)
+             , stat = "identity", fill = "powderblue"
+             ) +
+    geom_bar(mapping = aes(x = appearances*win_rate)
+             , stat = "identity", fill = "lightsalmon4"
+             ) +
+    geom_text(mapping = aes(x = appearances, label = appearances, hjust = 1.3,
+                            vjust = 0.45
+                            )
+              , size = 3
+              ) +
+    geom_text(mapping = aes(x = win_rate*appearances, hjust = 1.1, vjust = 0.45,
+                    label = paste0(win_rate * appearances, " ", "(",
+                                  percent(win_rate, .1), ")"
+                                   )
+                            ), color = "white", size = 3
+              ) +
+    theme(legend.position = "none"
+          , panel.background = element_rect(fill = "white", color = "grey75")
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          ) +
+    labs(x = "Wins (Win Rate) vs Total Appearances", y = NULL)
 
 ```
