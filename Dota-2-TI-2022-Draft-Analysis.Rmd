@@ -1,8 +1,8 @@
 ---
-title: "Dota 2 TI11 Draft Analysis"
+title: "Dota 2 International 2022 Draft Analysis"
 author: "Dave Whitsett"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 urlcolor: blue
     
 ---
@@ -17,6 +17,10 @@ library(plyr)
 library(tidyverse)
 library(wrapr)
 library(lubridate)
+
+## USEFUL FUNCTIONS ##
+
+'%notin%' <- Negate('%in%')
 
 ## DATA WRANGLING ##
 
@@ -84,6 +88,8 @@ all_drafts$matchday <- matchdays
 all_drafts <- subset(all_drafts, select = -ord)
 
 rename(all_drafts, pick = order)
+
+all_drafts$order <- all_drafts$order + 1
 
 ## The draft occurs over distinct "phases," which it will be good to demarkate
 ## for later analyses.
@@ -188,11 +194,11 @@ I'll start by just summarizing a few of the overall trends over the course of th
 
 In Dota 2, the term "contested" is an all-inclusive category meaning "picked OR banned." The most contested heroes are likely to be the heroes teams thought were the most powerful overall, as well as the most flexible. As such, the average draft position of many the most-contested heroes should also be early, since the most flexible and powerful heroes are likely to be picked or banned before those heroes whose utility is more situational, and could easily be countered by later picks and bans.
 
-As the graphics below show, this is exactly the case. The first graphic shows how often the 25 most-contested heroes were picked or banned, while the second graphic shows the average draft position and total picks/bans of each of those heroes. As the second graphic illustrates, the more a hero was picked, on average (that is, the farther right it appears on the graph), the lower its average draft position (that is, the farther down it appears on the graph). If we think of the draft in terms of phases (which most analysts do), the median draft position of nine heroes is less than eight, which means those heroes were either first-phase banned or first-phase picked in the majority of the matches in which they were contested. An additional 10 heroes' median draft position is below 13, which means they were generally either picked or banned before the second picking phase began.
+As the graphics below show, this is exactly the case. The first graphic shows how often the 25 most-contested heroes were picked or banned, while the second graphic shows the average draft position and total picks/bans of each of those heroes. As the second graphic illustrates, the more a hero was picked, on average (that is, the farther right it appears on the graph), the lower its average draft position (that is, the farther down it appears on the graph). If we think of the draft in terms of phases (which most analysts do), the median draft position of nine heroes is $<9$, which means those heroes were either first-phase banned or first-phase picked in the majority of the matches in which they were contested. An additional 10 heroes' median draft position is $<13$, which means they were generally either picked or banned before the second picking phase began.
 
 &nbsp;  
 
-```{r echo = FALSE, fig.height = 3.5}
+```{r echo = FALSE, fig.height = 3.2}
 
 all_drafts %>%
   group_by(hero_name) %>%
@@ -226,7 +232,7 @@ all_drafts %>%
 
 ```
 
-```{r echo = FALSE, fig.height = 3.5}
+```{r echo = FALSE, fig.height = 3.2}
 
 all_drafts %>%
   group_by(hero_name) %>%
@@ -255,7 +261,7 @@ A final point of interest is the relationship between hero *role* and draft posi
 
 What this means is that supports are likely to dominate the earliest *picks* in the draft, joined by only the most powerful and difficult-to-counter win condition heroes in the patch. The same is not necessarily true for *bans,* however. Because they usually do not have the potential to carry a game on their own, supports are not as feared as the most powerful cores. We should, therefore, expect to see supports dominate the early *picks* of the draft, but not necessarily the early *bans.* On the other hand, cores should often be *banned* early but *picked* late. The only exceptions to this rule should be the few heroes commonly thought to be *so* strong that they are nearly impossible to counter. In Dota 2 lingo, these heroes are "overpowered," or "OP." Let's look at the data and see if this is the case.
 
-```{r echo = FALSE, fig.height = 3.5}
+```{r echo = FALSE, fig.height = 3.2}
 
 all_drafts %>%
   group_by(hero_name) %>%
@@ -286,39 +292,41 @@ all_drafts %>%
 
 The plot above compares the pick/ban ratio of the 25 most-contested heroes with their average draft position. The farther right on the graph, the more the hero was picked (as opposed to banned). The higher up on the graph, the later that hero's average draft position. The dashed vertical line represents a pick/ban ratio of 0.4167. This is because there are 10 picks and 14 bans in a single draft, i.e. picks make up $10/24 = 0.4167$ of the draft. Thus, heroes to the left of the line are *more* likely to be banned than picked, proportional to the total available picks vs. bans, while those to the right are *less.*
 
-This plot clearly supports the hypotheses outlined above. All but one of the supports among the top-25 most-contested heroes (Snapfire, Silencer, Crystal Maiden, Tiny, Clockwerk, Nyx Assassin, Undying, and Marcy) fall to the right of the dashed line. The only "support" to the left is Primal Beast, who is often played as a core and only sometimes as a support. The majority of these supports also sport a low average draft position, with most being drafted before the 9th pick/ban (Snapfire is the only exception). Meanwhile, *all* the heroes to the left of the dashed line are cores, and most of them averaged a draft position later than the 9th pick/ban. In The International 2022, teams showed a strong propensity to *ban* cores early and *pick* them late, preferring to spend their early picks on supports.
+This plot clearly supports the hypotheses outlined above. All but one of the supports among the top-25 most-contested heroes (Snapfire, Silencer, Crystal Maiden, Tiny, Clockwerk, Nyx Assassin, Undying, and Marcy) fall to the right of the dashed line. The only "support" to the left is Primal Beast, who is often played as a core and only sometimes as a support. The majority of these supports also sport a low average draft position, with most being drafted before the 10th pick/ban (Snapfire is the only exception). Meanwhile, *all* the heroes to the left of the dashed line are cores, and most of them averaged a draft position of $>10$. In The International 2022, teams showed a strong propensity to *ban* cores early and *pick* them late, preferring to spend their early picks on supports.
 
 ## 2.2 Win Rates of Most Contested Heroes
 
 Let's assume for now that the theory behind banning cores early and picking them late while picking supports early is sound (if I have time later, I'll put that question in the crosshairs). Even if so, did pros identify the *right* cores to ban vs. those to let through? Did they, in other words, successfully differentiate the cores that were most difficult to deal with from those who *could* be dealt with? If they did, we should expect the cores in the lower-left quadrant of the plot above to have a *higher* win rate than the cores in the lower-right quadrant. Let's see if that was the case.
 
-```{r echo = FALSE, fig.height = 3.5}
+```{r echo = FALSE, fig.height = 3.2}
 
 all_drafts %>%
   filter(hero_name %in% c("Visage", "Broodmother", "Enigma", "Primal Beast"
-                          , "Marci", "Shadow Fiend", "Leshrac"
+                          , "Shadow Fiend", "Leshrac"
                           )
          ) %>%
   group_by(hero_name) %>%
   summarize(wins = sum(result[which(is_pick == 1)]), appearances = sum(is_pick)
             , win_rate = ((sum(result[which(is_pick == 1)]))/(sum(is_pick)))
+            , bans = (n())-(sum(is_pick)), contestations = n()
             ) %>%
   arrange(desc(win_rate)) %>%
   
-  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
-    geom_bar(mapping = aes(x = appearances), stat = "identity"
+  ggplot(mapping = aes(x = win_rate, y = reorder(hero_name, win_rate))) +
+    geom_bar(mapping = aes(x = contestations), stat = "identity"
              , fill = "lightblue2") +
-    geom_bar(mapping = aes(x = wins), stat = "identity"
+    geom_bar(mapping = aes(x = appearances), stat = "identity"
              , fill = "slateblue4") +
-    geom_text(mapping = aes(label = appearances, x = appearances
+    geom_text(mapping = aes(label = bans, x = contestations
                             , hjust = 1.5, vjust = 0.3)
-              , size = 3.5
+              , size = 3
               ) +
-    geom_text(mapping = aes(label = paste0(wins, " (", percent(win_rate, 0.1)
+    geom_text(mapping = aes(label = paste0(appearances, " ("
+                                           , percent(win_rate, 0.1)
                                            , ")"
                                            )
-                            , x = wins, hjust = 1.1, vjust = 0.3
-                            ), color = "white", size = 3.5
+                            , x = appearances, hjust = 1.1, vjust = 0.3
+                            ), color = "white", size = 3
               ) +
     theme(legend.position = "none"
           , panel.background = element_rect(fill = "white"
@@ -327,15 +335,52 @@ all_drafts %>%
           , axis.title.x = element_text(color = "grey25", size = 10)
           , axis.title.y = element_text(color = "grey25", size = 10)
           ) +
-    labs(x = "Wins (Win Rate) vs Total Appearances", y = NULL)
+    labs(x = "Picks (Win Rate) vs Bans", y = NULL)
 
 ```
 
-This chart indicates that pros' assessment of these heroes was a bit of a mixed bag. In a broad sense, it seems pros were generally right about the overall strength of these heroes, as most sport a 50\%\+ win rate - impressive for cores picked early in the draft with so many opportunities left for the opposing team to counter them. On the other hand, pros' tendency to ban Primal Beast in the early phases while letting Leshrac through seems to have been a mistake. Primal Beast was banned 125 times but ended the tournament with only a 47.76\% win rate. Meanwhile, Leshrac was banned 72 times and allowed to be drafted 77 times, and ended the tournament with a 57.14\% win rate.
+The chart above compares the number of picks (dark blue bar) with the number of bans (light blue bar) for the six cores that fit the description above (average draft position $< 10$). They are listed in order of win rate, with the most-successful hero (Broodmother 65\% win rate) on top and the least successful hero (Primal Beast, 47\% win rate) on bottom. These numbers tell a mixed story. On the one hand, all but two of the heroes (Shadow Fiend and Primal Beast) boast a 50-plus percent win rate *despite* usually being picked early enough to give the opponent many opportunities to counter them. If a "win condition" hero is so strong that it regularly wins even *after* opponents have maximal opportunity to counter it, it makes sense to just ban it.
 
-Of course, these are just broad, overall trends, which by themselves can't give us a well-rounded view of the tournament as a whole. More interesting insights will require us to do more fine-grained analysis. Two analytical paths seems especially interesting to me. One is examining the relationship of *draft phases* to heroes' win rate. The other is to identify pros' evolving understanding of and adaptation to the "meta" over the course of the tournament by examining *trends over time.* I will turn to these questions in the coming sections.
+However, there are other numbers that suggest pros could have done better. Primal Beast was the second-most banned hero, being banned more than one-half of all games (125 times total). The vast majority of these bans (114) took place in the first banning phase, i.e. before *any* heroes were picked. More teams seemed to fear Primal Beast more than any other core, as no other core was banned so often in the first phase. Yet, in those games when Primal Beast *did* get through, the team that picked Primal Beast only wound up winning 47.8\% of the time. Leshrac, on the other hand, was banned only 72 times in total, with only 40 of these bans coming in the first phase. That is, Leshrac was about half as likely as Primal Beast to be banned at all and about one-third as likely to be banned in the first phase. Yet, Leshrac ended the tournament with a 57.14\% win rate despite usually being picked early. These statistics seem to suggest that teams may have benefited from banning Leshrac instead of Primal Beast.
 
-```{r echo = FALSE, fig.height = 3.5}
+Of course, the draft is more complicated than this. For one thing, draft order matters a *lot.* For instance, the team that picks first gets a single pick, while the next team gets two picks in a row. The second team might therefore choose to let *multiple* overpowered heroes through on purpose, conceding one to their rivals in order to get two themselves. And, of course, the team with first pick has little incentive to ban whatever hero they think is the *most* powerful because they'd rather pick it. On top of this, because bans are limited, there is always an opportunity cost to banning a given hero - banning *that* hero necessarily means *some other* hero, potentially a very strong one, has to be let through. And, of course, each team's will have their own style and their players will have certain heroes they are better and worse with. These factors could be more important than the innate skills and abilities of the heroes themselves. Because of this, we can't decisively conclude from the numbers above that teams were *wrong* to ban Primal Beast while letting Leshrac through. But we *can* test that hypothesis more directly by looking at the matches where precisely that happened.
+
+One way of trying to get a clearer picture of this Primal Beast vs. Leshrac issue is to look at whether *banning* Leshrac and/or *not banning* Primal Beast in the first phase was really the problem. It might seem straightforward, when looking at those heroes' *general* win rates, to conclude that teams should have banned Leshrac and let Primal Beast through. But in fact, the data strongly suggests the solution is not so simple. As it turns out, the win rate of teams who banned Primal Beast was 61.6\%, while the win rate of teams who banned Leshrac was only 47.2\%. Banning Leshrac in the first phase was especially unsuccessful, with only 42.5\% of teams who did so ending up winning the game.
+
+```{r echo = FALSE, fig.height = 3.2}
+
+all_drafts %>%
+  filter(hero_name %in% c("Primal Beast", "Leshrac")) %>%
+  group_by(hero_name) %>%
+  rename("Hero Name" = hero_name) %>%
+  summarize("Total Bans" = length(which(is_pick == FALSE))
+      , "Banner WR" = percent(mean(result[which(is_pick == FALSE)]), 1)
+      , "Total Picks" = length(which(is_pick == TRUE))
+      , "Picker WR" = percent(mean(result[which(is_pick == TRUE)]), 1)
+      , "Phase 1 Bans" = length(which(order < 5 & is_pick == FALSE))
+      , "Phase 1 Banner WR" = percent(mean(result[which(order < 5 &
+                                            is_pick == FALSE)]), 1
+                                      )
+      , "Phase 1 Picks" = length(which(order %in% 5:8 & is_pick == TRUE))
+      , "Phase 1 Picker WR" = percent(mean(result[which(order %in% 5:8 &
+                                              is_pick == TRUE)]), 1
+                                      )
+      , "Phase 2 Bans" = length(which(order %in% 9:14 & is_pick == FALSE))
+      , "Phase 2 Banner WR" = percent(mean(result[which(order %in% 9:14 &
+                                              is_pick == FALSE)]), 1
+                                      )
+      , "Phase 2 Picks" = length(which(order %in% 15:18 & is_pick == TRUE))
+      , "Phase 2 Picker WR" = percent(mean(result[which(order %in% 15:18 &
+                                              is_pick == TRUE)]), 1
+                                      )
+      ) %>%
+  formattable(align = c("l", rep("c", 10), "r"))
+
+```
+
+these are just broad, overall trends, which by themselves can't give us a well-rounded view of the tournament as a whole. More interesting insights will require us to do more fine-grained analysis. Two analytical paths seems especially interesting to me. One is examining the relationship of *draft phases* to heroes' win rate. The other is to identify pros' evolving understanding of and adaptation to the "meta" over the course of the tournament by examining *trends over time.* I will turn to these questions in the coming sections.
+
+```{r echo = FALSE, fig.height = 3.2}
 
 all_drafts %>%
   group_by(hero_name) %>%
