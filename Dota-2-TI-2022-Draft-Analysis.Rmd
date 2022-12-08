@@ -3,8 +3,13 @@ title: "Dota 2 International 2022 Draft Analysis"
 author: "Dave Whitsett"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
-  html_document: default
+  pdf_document: null
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes:
+- \usepackage{colortbl}
+- \usepackage{multirow}
 urlcolor: blue
 ---
 ```{r echo = FALSE, results = 'hide', error = FALSE, message = FALSE, warning = FALSE}
@@ -192,7 +197,96 @@ Because Dota is so complex, it is not easy even for the pros to discover a "domi
 
 I'll start by just summarizing a few of the overall trends over the course of the tournament as a whole. After that, I'll go into more depth analyzing trends over time and pursuing whatever questions seem interesting given our first glance at the overall trends.
 
-## 2.1 Most Contested Heroes
+## 2.1 General Trends
+
+This analysis aims primarily to understand the impact of *hero selection* and *draft strategy* on the outcomes of matches in The International 2022. In order to estimate the impact of those factors, we need to establish baseline expectations. To do this, we need to do what we can to take into account aspects of Dota 2 matches that affect the outcome *besides* hero selection and draft strategy. Obviously, we can't do this perfectly because some factors that affect who wins Dota 2 matches can't easily be quantified. The most important of these is team ability. For most of those who followed the tournament, by the end of The International 2022, it seemed like Tundra Esports was clearly the best team in the world. They lost only a single game in the double-elimination tournament phase, swept the finals 3-0, and many of their matches were not particularly close. Their skill level may have been so high that they could win matches even while picking heroes that were not especially strong in this patch, and this could artificially inflate the statistics for the heroes they tended to pick more than other teams while deflating the statistics of the heroes frequently picked against them. If I have time later, I will compare the win rates of heroes when picked by Tundra vs. the win rate of the same heroes picked by other teams, but for the most part I will simply assume that the skill of the elite teams who qualified for The International 2022 was *close enough* that hero selection and draft strategy are often the decisive factors determining who wins and who loses.
+
+Two other factors outside hero selection and draft strategy are widely acknowledged to be important in determining match outcomes. One is the *map* and the other is *draft position.* The Dota 2 map is not perfectly symmetrical. The shape of the terrain of the upper-right portion (the "Dire" side) is different from the shape of the terrain of the lower-left portion (the "Radiant" side). For a variety of reasons, the differences in the shape of the terrain and the location of the Dire vs. Radiant towers and outposts can have an impact in the overall win rate of the Dire vs. the Radiant team within a given patch. In the current patch (patch 7.32), it seems that Dire teams have a slight advantage over Radiant teams, as [Spectral Stats](https://stats.spectral.gg/lrg2/?league=competitive2022_premium) reports an overall 53.3\% Dire win rate vs. a 47.7\% Radiant win rate across all professional matches in the 2021-2022 season. The gap between the two sides was smaller in The International 2022, with Dire winning about 52\% and Radiant about 48\% of all matches. This is a very small gap, but is at least worth noting.
+
+Draft position may also play a role. The exact order of the picks and bans varies from patch to patch. In The International 2022, the draft order was as follows:
+
+\begin{table}[h]
+    \begin{tabular}{|m{8mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|}
+      \hline
+      Phase & \multicolumn{4}{|c|}{Ban 1}  &  \multicolumn{4}{|c|}{Pick 1}  & \multicolumn{6}{|c|}{Ban 2}  &  \multicolumn{4}{|c|}{Pick 2}  & \multicolumn{4}{|c|}{Ban 3}  &  \multicolumn{2}{|c|}{Pick 3}\\
+      \hline
+      Team & A & B & A & B & A & B & B & A & A & B & A & B & A & B & B & A & A & B & A & B & A & B & A & B\\
+      \hline
+    \end{tabular}
+\end{table}
+
+The letters A and B represent the two sides in a given match (A = first pick, B = second pick). Several aspects of the draft order seem worth highlighting. Team A's main potential draft advantages seem to come mainly from their 1st and 2nd picks (1st and 4th pick overall). First overall pick obviously comes with the advantage of them to choose from the widest-possible range of heroes, while picking fourth gives them the chance to pick a hero that counters the first two picks of the other team and *immediately* turn around and ban up to three heroes that might counter their own pick. Team B's main potential draft advantages seem to come from having back-to-back picks in the 1st picking phase (picks 2-3 overall), having the 8th overall pick, and having the last (10th) pick of the draft. Getting to pick in positions 2 and 3 might be an advantage if there are a limited number of ultra-powerful heroes in the patch, in which case Team B might be able to maneuver things so that Team A gets only one ultra-powerful hero (first overall pick) while Team B gets two (2nd-3rd overall pick). Having 8th pick means Team B has a chance to pick a hero that counters Team A's first four picks and *immediately* turn around and ban up to two potential counters themselves. And having the last pick overall presents the ultimate opportunity to counter the other team's draft, albeit at the expense of being able to draw only from those heroes left in the pool after 23 combined picks and bans.
+
+In The International 2022, Team B's (the second-picking team) advantages seemed to outweigh those of Team A. Draft order bore a slightly stronger correlation to win rate than whether a team defended the Radiant or Dire side of the map. Overall, the team that picked 2nd won about 52.4\% of their matches while the team that picked 1st won about 47.6\%. While again not an overwhelmingly lopsided distribution, it is likewise worth mentioning.
+
+```{r echo = FALSE, message = FALSE, results = 'hide', fig.height = 3.2}
+
+## Proportion of matches where Dire side picked 1st
+
+all_drafts %>%
+  filter(order == 3) %>%
+  group_by(matchday) %>%
+  summarize(dire_1st_pick_rate = length(which(pick_side == "dire"))/n())
+
+## Overall win rate for 1st vs. 2nd pick
+
+all_drafts %>%
+  filter(order %in% 3:4) %>%
+  group_by(order) %>%
+  summarize(win_rate = mean(result))
+
+## Overall win rate for Radiant vs. Dire
+
+all_drafts %>%
+  group_by(winning_side) %>%
+  summarize(win_rate = n()/5544)
+
+## Radiant vs. Dire win rates, 1st v. 2nd pick
+
+all_drafts %>%
+  filter(order %in% 3:4) %>%
+  group_by(order, pick_side) %>%
+  summarize(total = n(), win_rate = mean(result))
+
+```
+
+Although neither map side (Radiant or Dire) or draft order (1st vs. 2nd pick) *by itself* seems to have had a massive effect on win rate, combined together the effect could be more significant. The table below illustrates this. When the Radiant team had 2nd pick, the results were more or less even (Radiant = 50.4\% win rate, Dire = 49.6\% win rate), but when the Dire team had 2nd pick, it was significantly more likely to win than the Radiant side (54.9\% vs. 45.1\%).
+
+\begin{table}[h]
+  \centering
+    \begin{tabular}{c|c|c}
+      Pick      & Radiant             & Dire\\
+      \hline
+      1st Pick  & 45.1\% (104 games)  & 49.6\% (127 games)\\
+      2nd Pick  & 50.4\% (129 games)  & 54.9\% (102 games)
+    \end{tabular}
+\end{table}
+```{r echo = FALSE, eval = FALSE, results = 'hide'}
+
+## Overall win rates, 1st v. 2nd pick and Radiant vs. Dire
+
+all_drafts %>%
+  filter(order %in% 3:4) %>%
+  group_by(order, pick_side) %>%
+  summarize(win_rate = mean(result))
+
+## Trend during group phase
+
+all_drafts %>%
+  filter(order %in% 3:4 & matchday %in% 1:4) %>%
+  group_by(order, pick_side) %>%
+  summarize(win_rate = mean(result))
+
+## Tundra Esports' picking patterns during elimination bracket
+
+all_drafts %>%
+  filter(matchday %in% 5:10 & pick_team == "Tundra Esports" & order %in% 3:4) %>%
+  group_by(order, pick_side) %>%
+  summarize(n())
+
+```
+
+## 2.2 Most Contested Heroes
 
 In Dota 2, the term "contested" is an all-inclusive category meaning "picked OR banned." The most contested heroes are likely to be the heroes teams thought were the most powerful overall, as well as the most flexible. As such, the average draft position of many the most-contested heroes should also be early, since the most flexible and powerful heroes are likely to be picked or banned before those heroes whose utility is more situational, and could easily be countered by later picks and bans.
 
@@ -296,7 +390,7 @@ The plot above compares the pick/ban ratio of the 25 most-contested heroes with 
 
 This plot clearly supports the hypotheses outlined above. All but one of the supports among the top-25 most-contested heroes (Snapfire, Silencer, Crystal Maiden, Tiny, Clockwerk, Nyx Assassin, Undying, and Marcy) fall to the right of the dashed line. The only "support" to the left is Primal Beast, who is often played as a core and only sometimes as a support. The majority of these supports also sport a low average draft position, with most a majority having been drafted before the 10th pick/ban (Snapfire is the only exception). Meanwhile, *all* the heroes to the left of the dashed line are cores, and most of them averaged a draft position of $>10$. In The International 2022, teams showed a strong propensity to *ban* cores early and *pick* them late, preferring to spend their early picks on supports.
 
-## 2.2 Win Rates of Most Contested Heroes
+## 2.3 Win Rates of Most Contested Heroes
 
 Let's assume for now that the theory behind banning cores early and picking them late while picking supports early is sound (if I have time later, I'll put that question in the crosshairs). Even if so, did pros identify the *right* cores to ban vs. those to let through? Did they, in other words, successfully differentiate the cores that were most difficult to deal with from those who *could* be dealt with? If they did, we should expect the cores in the lower-left quadrant of the plot above to have a *higher* win rate than the cores in the lower-right quadrant. Let's see if that was the case.
 
@@ -431,7 +525,7 @@ most_contested <- all_drafts %>%
 
 ```
 
-```{r echo = FALSE, message = FALSE}
+```{r echo = FALSE, message = FALSE, fig.height = 3.2}
 
 all_drafts %>%
   filter(hero_name %in% c("Broodmother", "Leshrac", "Primal Beast") &
@@ -444,7 +538,7 @@ all_drafts %>%
                             )
           ) %>%
   group_by(hero_name, order) %>%
-  summarize(games = n(), win_rate = mean(result)) %>%
+  summarize(total = n(), win_rate = mean(result)) %>%
   
   ggplot() +
     
@@ -453,20 +547,20 @@ all_drafts %>%
              , stat = "identity", position = "dodge"
              ) +
     geom_text(mapping = aes(x = hero_name, y = win_rate
-                            , label = percent(win_rate, 0.1)
+                            , label = percent(win_rate, 1)
                             , group = order
                             )
               , position = position_dodge(width = 0.9), vjust = -2.6
               , size = 3.7, color = "grey25"
               ) +
     geom_text(mapping = aes(x = hero_name, y = win_rate
-                            , label = paste0("(", games, ")")
+                            , label = paste0("(", total, ")")
                             , group = order)
               , position = position_dodge(width = 0.9), vjust = -.9
               , size = 3.7, color = "grey25"
               ) +
-    labs(x = "Win Rate by Pick Number (Total Picks)", y = "Win Rate") +
-    scale_fill_manual(values = c("darkolivegreen3", "chocolate2"
+    labs(x = "Win Rate by Draft Position (Total Picks)", y = "Win Rate") +
+    scale_fill_manual(values = c("darkolivegreen3", "firebrick2"
                                  , "darkolivegreen3"), name = "Pick"
                       , breaks = c("Pick 1", "Picks 2 & 3", "Pick 4")
                       ) +
@@ -484,33 +578,172 @@ all_drafts %>%
 
 ```
 
+As it turns out, the position in which these heroes were picked *did* matter for both Broodmother and Leshrac, but not so much for Primal Beast. Broodmother's win rate was only 37.5\% when picked 2nd or 3rd (these are the equivalent draft position, since the team with 2nd pick also has 3rd pick), but skyrocketed to 61.5\% when picked 4th. Meanwhile, Leshrac only won 33.3\% of the matches in which it was picked 1st, but that win rate ballooned to 58.3\% when picked 2nd/3rd and all the way up to 69.2\% when picked 4th. Primal Beast's win rate did not change a statistically significant amount from 1st (46.4\%) to 2nd/3rd pick (48.1\%), and was not picked enough in the 4th position (only 4 times) to make any reliable inferences.
+
+What can we conclude from this? Setting aside Primal Beast for now, whose "lose if you pick him but win if you ban him" relationship still remains something of an enigma, the immediate suggestion is that Broodmother and Leshrac were counterable heroes, but *only if* they were picked sufficiently early in the draft. Broodmother appears to have been counterable if picked 2nd or 3rd, but not if picked 4th, while Leshrac appears to have been counterable if picked 1st but not after. This makes sense when we think of the format of the draft. Picking a hero first gives the opposing team two *immediate* picks to counter that hero and five *overall* picks to counter it. Picking it 2nd/3rd gives the opposing team one *immediate* pick to counter the hero and four *overall* picks to do so. Both factors - the inability of the picking team to prevent the opposing team from picking key counters and the ability of the opposing team to mold 4-5 of their picks around defeating the "win condition" hero - are likely important.
+
+Perhaps the suggestion from these data is that in The International 2022, drafts were not typically won by getting ahold of the *most powerful hero(es)*, but instead by drafting *the right heroes* at *the right time.* Let's see if we can test this hypothesis and get more purchase on what "the right heroes" and "the right times" were.
+
+```{r echo = FALSE, results = 'hide', message = FALSE, warning = FALSE}
+
+## Create objects for most-contested cores & supports
+
+most_contested_cores <- all_drafts %>%
+  filter(hero_name %in% c("Leshrac", "Morphling", "Pangolier"
+            , "Beastmaster", "Enigma", "Broodmother", "Primal Beast"
+            , "Batrider", "Shadow Fiend", "Faceless Void")
+         )
+
+most_contested_supports <- all_drafts %>%
+  filter(hero_name %in% c("Nyx Assassin", "Marci", "Tiny", "Silencer"
+            , "Clockwerk", "Crystal Maiden", "Undying", "Snapfire"
+            , "Enchantress", "Disruptor")
+         )
+
+```
+
+```{r echo = FALSE, message = FALSE, fig.height = 4}
+
+most_contested_cores %>%
+  group_by(hero_name) %>%
+  filter(order %in% 1:8) %>%
+  mutate(order = factor(case_when(order %in% 1:4 ~ "Ban 1"
+                      , order == 5 ~ "Pick 1", order %in% 6:7 ~ "Picks 2 & 3"
+                      , order == 8 ~ "Pick 4"
+                                  )
+                      , levels = c("Pick 4", "Picks 2 & 3", "Pick 1", "Ban 1")
+                  )
+         ) %>%
+  group_by(hero_name, order) %>%
+  summarize(total = n(), win_rate = sum(result)/n()) %>%
+
+  ggplot() +
+    
+    geom_vline(xintercept = 0.5, linetype = 2, color = "grey85") +
+    geom_bar(mapping = aes(y = hero_name
+                           , x = win_rate, fill = order
+                           )
+             , stat = "identity", position = "dodge"
+             ) +
+    geom_text(mapping = aes(y = hero_name, x = win_rate
+                            , label = percent(win_rate, 1)
+                            , group = order
+                            )
+              , position = position_dodge(width = 0.9), vjust = 0.4
+              , hjust = -0.9, size = 2, color = "grey25"
+              ) +
+    geom_text(mapping = aes(y = hero_name, x = win_rate
+                            , label = paste0("(", total, ")"), vjust = 0.4
+                            , group = order)
+              , position = position_dodge(width = 0.9)
+              , hjust = -0.3, size = 2, color = "grey25"
+              ) +
+    labs(y = "Win Rate by Draft Position (Total Picks)"
+         , x = "Picking/Banning Team Win Rate"
+         , title = "Cores") +
+    scale_fill_manual(values = c("firebrick2", "palegreen", "palegreen3"
+                                 , "palegreen4"), name = "Pick"
+                      , breaks = c("Ban 1", "Pick 1", "Picks 2 & 3", "Pick 4")
+                      ) +
+    xlim(0, 1) +
+    theme(panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          , plot.title = element_text(color = "grey25", hjust =  0.5)
+          , legend.title = element_text(color = "grey25", size = 10)
+          , legend.title.align = 0.5
+          , legend.text = element_text(color = "grey25")
+          )
+
+most_contested_supports %>%
+  group_by(hero_name) %>%
+  filter(order %in% 1:8) %>%
+  mutate(order = factor(case_when(order %in% 1:4 ~ "Ban 1"
+                      , order == 5 ~ "Pick 1", order %in% 6:7 ~ "Picks 2 & 3"
+                      , order == 8 ~ "Pick 4"
+                                  )
+                      , levels = c("Pick 4", "Picks 2 & 3", "Pick 1", "Ban 1")
+                      )
+         ) %>%
+  group_by(hero_name, order) %>%
+  summarize(total = n(), win_rate = sum(result)/n()) %>%
+
+  ggplot() +
+    geom_vline(xintercept = 0.5, linetype = 2, color = "grey85") +
+    geom_bar(mapping = aes(y = hero_name, x = win_rate, fill = order)
+             , stat = "identity", position = "dodge"
+             ) +
+    geom_text(mapping = aes(y = hero_name, x = win_rate
+                            , label = percent(win_rate, 1)
+                            , group = order
+                            )
+              , position = position_dodge(width = 0.9), vjust = 0.4
+              , hjust = -0.9, size = 2, color = "grey25"
+              ) +
+    geom_text(mapping = aes(y = hero_name, x = win_rate
+                            , label = paste0("(", total, ")"), vjust = 0.4
+                            , group = order)
+              , position = position_dodge(width = 0.9)
+              , hjust = -0.3, size = 2, color = "grey25"
+              ) +
+    labs(y = "Win Rate by Draft Position (Total Picks)"
+         , x = "Picking/Banning Team Win Rate"
+         , title = "Supports") +
+    scale_fill_manual(values = c("firebrick2", "palegreen", "palegreen3"
+                                 , "palegreen4"), name = "Pick"
+                      , breaks = c("Ban 1", "Pick 1", "Picks 2 & 3", "Pick 4")
+                      ) +
+    xlim(0, 1) +
+    theme(panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          , plot.title = element_text(color = "grey25", hjust =  0.5)
+          , legend.title = element_text(color = "grey25", size = 10)
+          , legend.title.align = 0.5
+          , legend.text = element_text(color = "grey25")
+          )
+  
+
+```
+
 ```{r echo = FALSE, message = FALSE, fig.height = 5.75}
 
 most_contested %>%
   group_by(hero_name) %>%
   filter(n() > 120 & phase %in% c("ban_1", "pick_1", "ban_2", "pick_2")
          ) %>%
+  mutate(phase = factor(phase, levels = c("pick_2", "ban_2", "pick_1", "ban_1"))
+         ) %>%
   group_by(hero_name, phase) %>%
   summarize(total = n(), win_rate = mean(result)) %>%
   
   ggplot() +
-    geom_vline(xintercept = 0.5, linetype = 2, color = "grey85") +
     geom_bar(mapping = aes(y = hero_name, x = win_rate, fill = phase)
              , stat = "identity", position = "dodge") +
     geom_text(mapping = aes(y = hero_name, x = win_rate
                             , label = percent(win_rate, 0.1)
-                            , group = phase), hjust = -0.6
+                            , group = phase), hjust = -.35
               , position = position_dodge(width = 0.9)
               , size = 2.2, color = "grey25"
               ) +
     geom_text(mapping = aes(y = hero_name, x = win_rate
                   , label = paste0("(", total, ")")
-                  , group = phase), hjust = 0.6
+                  , group = phase), hjust = -1.8
               , position = position_dodge(width = 0.9)
               , size = 2.2, color = "grey25"
               ) +
     xlim(0, 1) +
-    labs(x = "Win Rate by Phase (Total Games)"
+    geom_vline(xintercept = 0.5, linetype = 2, color = "grey75") +
+    scale_fill_discrete(name = NULL
+                        , breaks = c("pick_2", "ban_2", "pick_1", "ban_1")
+                        , labels = c("Phase 2 Pick", "Phase 2 Ban"
+                                     , "Phase 1 Pick", "Phase 1 Ban")
+                        ) +
+    labs(x = "Win Rate by Draft Phase (Total Games)"
          , y = "Total Games") +
     theme(panel.background = element_rect(fill = "white"
                                             , color = "grey75"
