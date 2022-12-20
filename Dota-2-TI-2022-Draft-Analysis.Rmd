@@ -98,11 +98,11 @@ rename(all_drafts, pick = order)
 
 all_drafts$order <- all_drafts$order + 1
 
-## The draft occurs over distinct "phases," which it will be good to demarkate
+## The draft occurs over distinct "phases," which it will be good to demarcate
 ## for later analyses.
 
 phases_raw <- c(rep("ban_1", 4), rep("pick_1", 4), rep("ban_2", 6), rep("pick_2", 4)
-                , rep("ban_3", 4), rep("pick_3"), 2)
+                , rep("ban_3", 4), rep("pick_3", 2))
 
 phases <- rep(phases_raw, 231)
 
@@ -169,7 +169,7 @@ for (i in 1:5544) {
 
 Dota 2 is a real-time strategy game game played online between two teams of five players each. Winning requires both long-term strategy and quick in-game decision-making, the combination of which is very attractive to people who, like me, love the intellectual challenge of pitting their wits against others on the strategic battlefield but find "pure" strategy games like chess a bit too slow-paced.
 
-I won't go into an in-depth description of gameplay (those interested can find [a good summary by IGN here](https://www.ign.com/wikis/dota-2/Game_Overview)), but a few words about the basic structure of the game will help explain why it's especially interesting from a data analytic point of view. The name "Dota" is an acronym for "Defense Of The Ancient." The "Ancient" referred to in the name is a giant structure in the middle of each team's base. The "Dire" (red) team's Ancient is in the top-right corner of the map and the "Radiant" (green) team's Ancient is in the bottom-left corner. The goal of the game is to destroy the other team's Ancient before they destroy yours. Standing in the way of this goal are a series of towers - durable buildings that do heavy damage to anything that comes within range - as well as less-powerful minions that spawn regularly and behave predictably, and of course the opposing team. The map on which the games take place is always the same, and a simplified version is shown below.
+I won't go into an in-depth description of gameplay (those interested can find [a good summary by IGN here](https://www.ign.com/wikis/dota-2/Game_Overview)), but a few words about the basic structure of the game will help explain why it's especially interesting from a data analytic point of view. The name "Dota" is an acronym for "Defense Of The Ancient." The "Ancient" referred to in the name is a giant structure in the middle of each team's base. The "Dire" (red) team's Ancient is in the top-right corner of the map and the "Radiant" (green) team's Ancient is in the bottom-left corner. The goal of the game is to destroy the other team's Ancient before they destroy yours. Standing in the way of this goal are a series of towers - durable buildings that do heavy damage to anything that comes within range - as well as less-powerful minions that spawn regularly and behave predictably, and of course the opposing team. The map on which the games take place is always the same, and a simplified version with a few points of special interest is shown below.
 
 &nbsp;  
 
@@ -177,47 +177,67 @@ I won't go into an in-depth description of gameplay (those interested can find [
 
 ## 1.2 Heroes, Items, and "The Meta"
 
-The map, goal, and minions are always the same, and relatively straightforward. The complexity of Dota 2 comes from which **heroes** each team selects and the **items** those heroes buy to give them certain powers. Each player controls one hero, and each hero comes with an innate set of attributes (health, speed, magic, damage, etc.) and abilities (spells, auras, passive bonuses, etc.) that can be leveled up as the hero participates in battle with minions and opposing heroes. Killing minions and opposing heroes also grants gold, which enables heroes to buy items, which convey bonuses to the hero/team that equips them. As of the time of writing in late 2022, there are 123 heroes, each with its own innate set of attributes and abilities, and 208 items, each of which provides its own benefits (and sometimes weaknesses). Since each *individual* hero can be played in a wide variety of ways (different skill focuses, different item builds) and the number of possible 5-hero *team* compositions is so high, there is a very wide range of potential strategies for players to pursue in their effort to destroy the other team's towers and ancients. And since Dota 2 is regularly "patched," with heroes' abilities and items' prices being adjusted, new heroes and items being added, the map being tweaked, etc., the "meta," or relative strength of different strategies, is always changing.
+The map, goal, and minions are always the same, and relatively straightforward. The complexity of Dota 2 comes from which **heroes** each team selects and the **items** those heroes buy to give them certain powers. Each player controls one hero, and each hero comes with an innate set of attributes (health, speed, magic, damage, etc.) and abilities (spells, auras, passive bonuses, etc.) that can be leveled up as the hero participates in battle with minions and opposing heroes. Killing minions and opposing heroes also grants gold, which enables heroes to buy items, which convey bonuses to the hero/team that equips them. As of the time of writing in late 2022, there are 123 heroes, each with its own innate set of attributes and abilities, and 208 items, each of which provides its own benefits (and sometimes weaknesses). Since each *individual* hero can be played in a wide variety of ways (different skill focuses, different item builds) and the number of possible 5-hero *team* compositions is so high, there is an enormously wide range of potential strategies for players to pursue in their effort to destroy the other team's towers and ancients. And since Dota 2 is regularly "patched," with heroes' abilities and items' prices being adjusted, new heroes and items being added, the map being tweaked, etc., the "meta," or relative strength of different strategies, is always changing.
 
 ## 1.3 The Draft
 
-A final wrinkle to fold into these layers of complexity is the ability to *ban* heroes. In casual public matches, each team can propose up to 5 heroes to ban entirely from the hero pool. The rest are available for selection on a first-come, first-served basis. In professional matches, this process is handled through the draft. The draft takes place *before* the map shown above even appears. It is a strategic selection process through which teams maneuver to get the heroes they want and - often just as important - prevent the other team from getting the heroes *they* want. There are six phases of the draft overall - three banning phases (where each team selects a couple heroes *nobody* is allowed to pick) and three picking phases (where each team takes turn picking *their own* heroes). This is the aspect of Dota 2 strategy I will be focusing on in my analysis for this project.
+A final wrinkle to fold into these layers of complexity is the ability to *ban* heroes. In casual public matches, each team can propose up to 5 heroes to ban entirely from the hero pool. The rest are available for selection on a first-come, first-served basis. In professional matches, this process is handled through the draft. The draft takes place *before* the map shown above even appears. It is a strategic selection process through which teams maneuver to get the heroes they want and - often just as important - *prevent* the other team from getting the heroes *they* want. There are six phases of the draft overall - three banning phases (where each team selects a couple heroes *nobody* is allowed to pick) and three picking phases (where each team takes turn picking *their own* heroes). This is the aspect of Dota 2 strategy I will be focusing on in my analysis for this project.
 
 ![*Picks and bans for the final match of TI 2022 between Tundra Esports and Team Secret. The large icons are picked heroes, while the smaller icons beneath them are banned heroes.*](C:/Users/Dave/OneDrive/Documents/R/R Data Projects/Dota TI 2022 Data Project - OpenDota API/Dota_2_TI_11_Project_Images/Tundra_Secret_g3_Picks){width=85%}
 
-I will say more about drafting strategy as we work through the data together, but it seems wise to make a few preliminary notes. First, in professional games there are more *bans* than *picks,* and the first banning phase precedes the first picking phase. Second, the wide array of hero styles and game strategies available in Dota 2 mean that there are many opportunities for teams to counter the heroes the other team picks early in the draft. Together, this means that (a) there is a high premium on flexible, "all-around" heroes early in the draft and (b) we shouldn't expect the win rate for heroes who are almost always picked early in the draft to be much higher than 50\%. This is because, even if those heroes really *are* among the most powerful heroes in the "meta," the availability of so many picks and bans following their selection early in the draft gives them a higher hill to climb than heroes picked later in the draft, which teams can do less to counter. It also means that (c) in general, we should expect the heroes teams think most powerful to be banned more often than they are picked. This is simply because teams have more bans than picks, especially early in the draft where, by the end of the second banning phase, each team will have banned five heroes while only picking two.
+I will say more about drafting strategy as we work through the data together, but it seems wise to make a few preliminary notes. First, in professional games there are more *bans* than *picks,* and the first banning phase precedes the first picking phase. Second, the wide array of hero styles and game strategies available in Dota 2 mean that there are many opportunities for teams to counter the heroes the other team picks early in the draft. Putting these facts together, I would expect this to means that (a) there is a high premium on flexible, "all-around" heroes early in the draft and (b) we shouldn't expect the win rate for heroes who are almost always picked early in the draft to be much higher than 50\%. This is because, even if those heroes really *are* among the most powerful heroes in the "meta," the availability of so many picks and bans following their selection early in the draft gives them a higher hill to climb than heroes picked later in the draft, which teams can do less to counter. It also means that (c) in general, we should expect the heroes teams think most powerful to be banned more often than they are picked. This is simply because teams have more bans than picks, especially early in the draft where, by the end of the second banning phase, each team will have banned five heroes while only picking two.
 
 ## 1.4 The International
 
 Every year, there is a large international tournament, aptly named "The International," or just "TI" for short, where the best Dota 2 teams in the world meet and vie for the title of best in the world (as well as for an [enormous lump of cash](https://www.statista.com/statistics/749033/dota-2-championships-prize-pool/)). This year (2022), 20 teams were involved in The International, which took place over two phases - the Group Phase and the Main Event. In the Group Phase, teams were divided into two groups of ten teams, and each team within each group played every other team twice. For the Main Event, the top four teams from each group moved on to start in the Upper Bracket of a double-elimination tournament of best-of-three matches, the next four teams started in the Lower Bracket, and the bottom two teams were eliminated. By the end of the tournament, 231 games had been played in total.
 
-Because Dota is so complex, it is not easy even for the pros to discover a "dominant" strategy or set of strategies. Doing so requires teams to play a large number of matches in a given patch. Moreover, professional teams have an incentive to hide the strategies they think are the best from other pro teams until they compete in a prestigious tournament since the element of surprise is so valuable. Because of its immense prestige, elite skill level and enormous prize pool, The International offers the most likely scene for the most-dominant strategies to be developed and/or unveiled. And since there are so many matches, with data automatically captured for every match and stored in [OpenDota's API](https://docs.opendota.com/), The International represents a unique opportunity to use data to analyze the current "meta." That is the aim of this project.
+&nbsp;  
 
-# Part 2: Analysis of Overall Trends for TI 2022
+![*Celebrations after the final game of TI 2019 (courtesy* [Polygon](https://www.polygon.com/2020/5/1/21243964/dota-2-the-international-2020-delayed-coronavirus-pandemic))](Dota_2_TI_11_Project_Images/ti_tourn.jpg){width=85%}
 
-I'll start by just summarizing a few of the overall trends over the course of the tournament as a whole. After that, I'll go into more depth analyzing trends over time and pursuing whatever questions seem interesting given our first glance at the overall trends.
+Because Dota is so complex, it is not easy even for the pros to discover a "dominant" strategy or set of strategies. Doing so requires teams to play a large number of matches in a given patch. Moreover, professional teams have an incentive to hide the strategies they think are the best from other pro teams until they compete in a prestigious tournament since the element of surprise is so valuable. Because of its immense prestige, elite skill level and enormous prize pool, The International offers the most likely scene for the most-dominant strategies to be developed and/or unveiled. And since there are so many matches, with data automatically captured for every match and stored in [OpenDota's API](https://docs.opendota.com/), The International represents a unique opportunity to use data to analyze the current "meta." That is the aim of this project. In particular, I want to analyze the impact of *draft strategy* and *hero selection* on match outcomes, as well as how those things evolved over the course of the tournament.
 
-## 2.1 General Trends
+# Part 2: Analysis of Overall Trends for the Tournament as a Whole
 
-This analysis aims primarily to understand the impact of *hero selection* and *draft strategy* on the outcomes of matches in The International 2022. In order to estimate the impact of those factors, we need to establish baseline expectations. To do this, we need to do what we can to take into account aspects of Dota 2 matches that affect the outcome *besides* hero selection and draft strategy. Obviously, we can't do this perfectly because some factors that affect who wins Dota 2 matches can't easily be quantified. The most important of these is team ability. For most of those who followed the tournament, by the end of The International 2022, it seemed like Tundra Esports was clearly the best team in the world. They lost only a single game in the double-elimination tournament phase, swept the finals 3-0, and many of their matches were not particularly close. Their skill level may have been so high that they could win matches even while picking heroes that were not especially strong in this patch, and this could artificially inflate the statistics for the heroes they tended to pick more than other teams while deflating the statistics of the heroes frequently picked against them. If I have time later, I will compare the win rates of heroes when picked by Tundra vs. the win rate of the same heroes picked by other teams, but for the most part I will simply assume that the skill of the elite teams who qualified for The International 2022 was *close enough* that hero selection and draft strategy are often the decisive factors determining who wins and who loses.
+I'll start by just summarizing a few of the aggregate trends for the tournament as a whole. After that, I'll go into more granular analysis in an attempt to answer whatever questions seem interesting given our first glance at the overall trends.
 
-Two other factors outside hero selection and draft strategy are widely acknowledged to be important in determining match outcomes. One is the *map* and the other is *draft position.* The Dota 2 map is not perfectly symmetrical. The shape of the terrain of the upper-right portion (the "Dire" side) is different from the shape of the terrain of the lower-left portion (the "Radiant" side). For a variety of reasons, the differences in the shape of the terrain and the location of the Dire vs. Radiant towers and outposts can have an impact in the overall win rate of the Dire vs. the Radiant team within a given patch. In the current patch (patch 7.32), it seems that Dire teams have a slight advantage over Radiant teams, as [Spectral Stats](https://stats.spectral.gg/lrg2/?league=competitive2022_premium) reports an overall 53.3\% Dire win rate vs. a 47.7\% Radiant win rate across all professional matches in the 2021-2022 season. The gap between the two sides was smaller in The International 2022, with Dire winning about 52\% and Radiant about 48\% of all matches. This is a very small gap, but is at least worth noting.
+This analysis aims primarily to understand the impact of *hero selection* and *draft strategy* on the outcomes of matches in The International 2022. In order to estimate the impact of those factors, we need to establish baseline expectations. To do this, we need to do what we can to take into account aspects of Dota 2 matches that affect the outcome *besides* hero selection and draft strategy. We can't do this perfectly because some factors that affect who wins Dota 2 matches can't easily be quantified. The most important of these is *team ability.* For most of those who followed the tournament, by the end of The International 2022, it seemed like Tundra Esports was clearly the best team in the world. They lost only a single game in the double-elimination tournament phase, swept the finals 3-0, and many of their matches were not particularly close. Their skill level may have been so high that they could win matches even while picking heroes that were not especially strong in this patch, and this could artificially inflate the statistics for the heroes they tended to pick more than other teams while deflating the statistics of the heroes frequently picked against them. If I have time later, I will attempt to estimate the potential skew this may have put on tournament data by comparing the win rates of heroes when picked by Tundra vs. the win rate of the same heroes picked by other teams. However, for the most part I will simply assume that the skill of the elite teams who qualified for The International 2022 was *close enough* that hero selection and draft strategy are often the decisive factors determining who wins and who loses.
+
+## 2.1 Overall Win Rates for Dire/Radiant and 1st/2nd Pick
+
+### 2.1.a Overall Dire vs. Radiant Win Rate
+
+Two other factors outside hero selection and draft strategy are widely acknowledged to be important in determining match outcomes. One is the *map* and the other is *draft position.* The Dota 2 map is not perfectly symmetrical. The shape of the terrain of the upper-right portion (the "Dire" side) is different from the shape of the terrain of the lower-left portion (the "Radiant" side). For a variety of reasons, the differences in the shape of the terrain and the location of the Dire vs. Radiant towers and outposts can have an impact in the overall win rate of the Dire vs. the Radiant team within a given patch. In the current patch (patch 7.32), it seems that Dire teams have a slight advantage over Radiant teams, as [Spectral Stats](https://stats.spectral.gg/lrg2/?league=competitive2022_premium) reports an overall 53.3\% Dire win rate vs. a 47.7\% Radiant win rate across all professional matches in the 2021-2022 season. The gap between the two sides was smaller in The International 2022, with Dire winning about 52\% and Radiant about 48\% of all matches. This is a very small difference, but is at least worth noting.
+
+\begin{table}[h]
+  \centering
+    \begin{tabular}{c|c|c}
+            & Overall Patch Win Rate & Overall TI 2022 Win Rate\\
+    \hline
+    Dire    & 53.3\%                 & 52.0\%\\
+    Radiant & 47.7\%                 & 48.0\%\\
+    \hline
+    \end{tabular}
+\end{table}
+  
+
+## 2.1.b Overall 1st Pick vs. 2nd Pick Win Rate
 
 Draft position may also play a role. The exact order of the picks and bans varies from patch to patch. In The International 2022, the draft order was as follows:
 
 \begin{table}[h]
-    \begin{tabular}{|m{8mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|m{2mm}|}
-      \hline
-      Phase & \multicolumn{4}{|c|}{Ban 1}  &  \multicolumn{4}{|c|}{Pick 1}  & \multicolumn{6}{|c|}{Ban 2}  &  \multicolumn{4}{|c|}{Pick 2}  & \multicolumn{4}{|c|}{Ban 3}  &  \multicolumn{2}{|c|}{Pick 3}\\
+    \begin{tabular}{m{8mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}}
+                              & \multicolumn{4}{c}{Ban 1}  &  \multicolumn{4}{c}{Pick 1}  & \multicolumn{6}{c}{Ban 2}  &  \multicolumn{4}{c}{Pick 2}  & \multicolumn{4}{c}{Ban 3}  &  \multicolumn{2}{c}{Pick 3}\\
       \hline
       Team & A & B & A & B & A & B & B & A & A & B & A & B & A & B & B & A & A & B & A & B & A & B & A & B\\
-      \hline
     \end{tabular}
 \end{table}
 
-The letters A and B represent the two sides in a given match (A = first pick, B = second pick). Several aspects of the draft order seem worth highlighting. Team A's main potential draft advantages seem to come mainly from their 1st and 2nd picks (1st and 4th pick overall). First overall pick obviously comes with the advantage of them to choose from the widest-possible range of heroes, while picking fourth gives them the chance to pick a hero that counters the first two picks of the other team and *immediately* turn around and ban up to three heroes that might counter their own pick. Team B's main potential draft advantages seem to come from having back-to-back picks in the 1st picking phase (picks 2-3 overall), having the 8th overall pick, and having the last (10th) pick of the draft. Getting to pick in positions 2 and 3 might be an advantage if there are a limited number of ultra-powerful heroes in the patch, in which case Team B might be able to maneuver things so that Team A gets only one ultra-powerful hero (first overall pick) while Team B gets two (2nd-3rd overall pick). Having 8th pick means Team B has a chance to pick a hero that counters Team A's first four picks and *immediately* turn around and ban up to two potential counters themselves. And having the last pick overall presents the ultimate opportunity to counter the other team's draft, albeit at the expense of being able to draw only from those heroes left in the pool after 23 combined picks and bans.
+The letters A and B represent the two sides in a given match (A = first pick, B = second pick). Note that while the picks/bans *generally* alternate A, B, A, B, etc., there are two exceptions. In the first picking phase, Team A picks 1st and 4th while Team B picks 2nd and 3rd. The same is true in reverse order in the second picking phase. There, Team B picks 1st and 4th (5th and 8th picks overall, respectively), while Team B picks 2nd and 3rd (6th and 7th overall, respectively).
 
-In The International 2022, Team B's (the second-picking team) advantages seemed to outweigh those of Team A. Draft order bore a slightly stronger correlation to win rate than whether a team defended the Radiant or Dire side of the map. Overall, the team that picked 2nd won about 52.4\% of their matches while the team that picked 1st won about 47.6\%. While again not an overwhelmingly lopsided distribution, it is likewise worth mentioning.
+This way of ordering the draft presents potential advantages to each team. Team A's main potential draft advantages seem to come mainly from their 1st and 2nd picks (1st and 4th pick overall). First overall pick obviously comes with the advantage of them to choose from the widest-possible range of heroes, while picking fourth gives them the chance to pick a hero that counters the first two picks of the other team and *immediately* turn around and ban up to three heroes that might counter their own pick. Team B's main potential draft advantages, meanwhile, seem to come from having back-to-back picks in the 1st picking phase (picks 2-3 overall), having the 8th overall pick, and having the last (10th) pick of the draft. Getting to pick in positions 2 and 3 might be an advantage if there are a limited number of ultra-powerful heroes in the patch, in which case Team B might be able to maneuver things so that Team A gets only one ultra-powerful hero (first overall pick) while Team B gets two (2nd-3rd overall pick). Having 8th pick means Team B has a chance to pick a hero that counters Team A's first four picks and *immediately* turn around and ban up to two potential counters themselves. And having the last pick overall presents the ultimate opportunity to counter the other team's draft, albeit at the expense of being able to draw only from those heroes left in the pool after 23 combined picks and bans.
+
+In The International 2022, the second-picking team's advantages seemed on aggregate to outweigh those of the first-picking team. Draft order bore a slightly stronger correlation to win rate than whether a team defended the Radiant or Dire side of the map. Overall, the team that picked 2nd won about 52.4\% of their matches while the team that picked 1st won about 47.6\%. While again not an overwhelmingly lopsided distribution, it is likewise worth mentioning.
 
 ```{r echo = FALSE, message = FALSE, results = 'hide', fig.height = 3.2}
 
@@ -250,17 +270,21 @@ all_drafts %>%
 
 ```
 
-Although neither map side (Radiant or Dire) or draft order (1st vs. 2nd pick) *by itself* seems to have had a massive effect on win rate, combined together the effect could be more significant. The table below illustrates this. When the Radiant team had 2nd pick, the results were more or less even (Radiant = 50.4\% win rate, Dire = 49.6\% win rate), but when the Dire team had 2nd pick, it was significantly more likely to win than the Radiant side (54.9\% vs. 45.1\%).
+## 2.1.c Combined Effects of Draft Position and Map Side
+
+Although neither map side (Radiant or Dire) or draft order (1st vs. 2nd pick) *by itself* seems to have had a massive effect on win rate, combined together the effect seems to have been more significant. The table below illustrates this. When the Radiant team had 2nd pick, the results were more or less even (Radiant = 50.4\% win rate, Dire = 49.6\% win rate), but when the Dire team had 2nd pick, it was significantly more likely to win than the Radiant side (54.9\% vs. 45.1\%). During the tournament, one team got to choose *either* their draft order *or* their map side; the other choice was left to the other team. Because more games (127 & 129 respectively) were played under the Dire 1st/Radiant 2nd condition than were played under the Radiant 1st/Dire 2nd condition (104 & 102 respectively), it may be that many teams had a general sense of the advantages of 2nd pick/Dire side and did not allow their opponent to get both 2nd pick and Dire. However, as we shall see later when we delve into the way the "meta" evolved over the course of the tournament, this does not seem entirely likely because the win rate for Radiant vs. Dire fluctuated dramatically from day-to-day and stage-to-stage. 
 
 \begin{table}[h]
   \centering
     \begin{tabular}{c|c|c}
-      Pick      & Radiant             & Dire\\
+                & Radiant             & Dire\\
       \hline
       1st Pick  & 45.1\% (104 games)  & 49.6\% (127 games)\\
+      \hline
       2nd Pick  & 50.4\% (129 games)  & 54.9\% (102 games)
     \end{tabular}
 \end{table}
+
 ```{r echo = FALSE, eval = FALSE, results = 'hide'}
 
 ## Overall win rates, 1st v. 2nd pick and Radiant vs. Dire
@@ -270,12 +294,17 @@ all_drafts %>%
   group_by(order, pick_side) %>%
   summarize(win_rate = mean(result))
 
-## Trend during group phase
+## Trends during group phase
 
 all_drafts %>%
-  filter(order %in% 3:4 & matchday %in% 1:4) %>%
-  group_by(order, pick_side) %>%
-  summarize(win_rate = mean(result))
+  filter(order %in% 3:4) %>%
+  mutate(tourn_phase = case_when(matchday == 1 ~ 1, matchday == 2 ~ 2
+                                 , matchday == 3 ~ 3, matchday == 4 ~ 4
+                                 , matchday %in% 5:10 ~ 5)
+         ) %>%
+  group_by(order, pick_side, tourn_phase) %>%
+  summarize(games = n(), win_rate = mean(result)) %>%
+  arrange(tourn_phase, order)
 
 ## Tundra Esports' picking patterns during elimination bracket
 
@@ -288,9 +317,11 @@ all_drafts %>%
 
 ## 2.2 Most Contested Heroes
 
-In Dota 2, the term "contested" is an all-inclusive category meaning "picked OR banned." The most contested heroes are likely to be the heroes teams thought were the most powerful overall, as well as the most flexible. As such, the average draft position of many the most-contested heroes should also be early, since the most flexible and powerful heroes are likely to be picked or banned before those heroes whose utility is more situational, and could easily be countered by later picks and bans.
+From the previous section, we've seen that in TI 2022, playing the Dire side of the map probably presented a *slight* advantage, as did picking second, though I noted that the estimating the significance of these "advantages" is complicated by their fluctuations over time, which I'll get to later. For now, let's move into the meat and bones of this analysis - hero selection and draft strategy. I'll start with the former.
 
-As the graphics below show, this is exactly the case. The first graphic shows how often the 25 most-contested heroes were picked or banned, while the second graphic shows the average draft position and total picks/bans of each of those heroes. As the second graphic illustrates, the more a hero was picked, on average (that is, the farther right it appears on the graph), the lower its average draft position (that is, the farther down it appears on the graph). If we think of the draft in terms of phases (which most analysts do), the median draft position of nine heroes is $<9$, which means those heroes were either first-phase banned or first-phase picked in the majority of the matches in which they were contested. An additional 10 heroes' median draft position is $<13$, which means they were generally either picked or banned before the second picking phase began.
+### 2.2.a Most Contested Heroes Overall
+
+Below is a chart showing the most contested heroes of TI 2022. The black portion of each bar is the number of times that hero was *picked* over the duration of the entire tournament, the yellow portion of each bar is the number of times that hero was *banned* during that same duration, and the length of the bar as a whole represents the total number of matches that hero was *contested* (i.e. picked or banned).
 
 &nbsp;  
 
@@ -328,34 +359,11 @@ all_drafts %>%
 
 ```
 
-```{r echo = FALSE, fig.height = 3.2}
+### 2.2.b Average Draft Position and Ban/Pick Rate for Cores vs. Supports
 
-all_drafts %>%
-  group_by(hero_name) %>%
-  summarize(total_contested = n(), avg_pos = median(order, na.rm = TRUE)) %>%
-  arrange(desc(total_contested)) %>%
-  slice(1:25) %>%
-  arrange(avg_pos) %>%
-  
-  ggplot(mapping = aes(x = total_contested, y = avg_pos)) +
-    geom_point(mapping = aes(color = hero_name)) +
-    geom_text(mapping = aes(label = hero_name, color = hero_name)
-              , nudge_y = 0.7, size = 3.2
-              ) +
-    theme(legend.position = "none"
-          , panel.background = element_rect(fill = "white"
-                                            , color = "grey75"
-                                            )
-          , axis.title.x = element_text(color = "grey25", size = 10)
-          , axis.title.y = element_text(color = "grey25", size = 10)
-          ) +
-    labs(x = "Total Contestation", y = "Average Draft Position")
+A point of interest is the relationship between hero *role* and draft position. Each of the five heroes on a given team has a unique role. Two heroes are "supports" (positions 4 and 5), which usually have all-around utility but do not scale into ultra-powerful heroes later in the game. The other heroes are "cores" (positions 1, 2, and 3) who scale better into the late game. Generally speaking, it is the job of the supports to take care of their cores in the early game so that they can scale into ultra-powerful heroes that ultimately take over the game and "carry" the team to victory. Due to the mechanics of the game and the nature of the draft, however, it is very difficult to guarantee that *all* the cores will be able to scale well. Teams can realistically only count on 1 or 2 of their cores to have a good enough early game to carry in the mid-to-late game. Because of this, teams usually wait to pick their key hero(es), or their "Win Condition(s)," until late in the draft. Usually, the Win Condition hero(es) are played in position 1 or 2, though sometimes they can be position 3.
 
-```
-
-A final point of interest is the relationship between hero *role* and draft position. Each of the five heroes on a given team has a unique role. Two heroes are "supports" (positions 4 and 5), which usually have all-around utility but do not scale into ultra-powerful heroes later in the game. The other heroes are "cores" (positions 1, 2, and 3) who scale better into the late game. Generally speaking, it is the job of the supports to take care of their cores in the early game so that they can scale into ultra-powerful heroes that ultimately take over the game and "carry" the team to victory. Due to the mechanics of the game and the nature of the draft, however, it is very difficult to guarantee that *all* the cores will be able to scale well. Teams can realistically only count on 1 or 2 of their cores to have a good enough early game to carry in the mid-to-late game. Because of this, teams usually wait to pick their key hero(es), or their "win condition(s)," until late in the draft. Usually, the "win condition" hero is played in position 1 or 2, though sometimes it can be position 3.
-
-What this means is that supports are likely to dominate the earliest *picks* in the draft, joined by only the most powerful and difficult-to-counter win condition heroes in the patch. The same is not necessarily true for *bans,* however. Because they usually do not have the potential to carry a game on their own, supports are not as feared as the most powerful cores. We should, therefore, expect to see supports dominate the early *picks* of the draft, but not necessarily the early *bans.* On the other hand, cores should often be *banned* early but *picked* late. The only exceptions to this rule should be the few heroes commonly thought to be *so* strong that they are nearly impossible to counter. In Dota 2 lingo, these heroes are "overpowered," or "OP." Let's look at the data and see if this is the case.
+I expect this to mean that supports are likely to dominate the earliest *picks* in the draft, joined by only the most powerful and difficult-to-counter Win Condition heroes in the patch. The same is not necessarily true for *bans,* however. Because they usually do not have the potential to carry a game on their own, supports are not as feared as the most powerful cores. I expect, therefore, that while supports may dominate the early *picks* of the draft, they will not be *banned* as much as the most-powerful cores. On the other hand, cores should often be *banned* early but *picked* late. The only exceptions to this rule should be the few heroes commonly thought to be *so* strong that they are nearly impossible to counter. In Dota 2 lingo, these heroes are "overpowered," or "OP." Let's look at the data and see if this is the case.
 
 ```{r echo = FALSE, fig.height = 3.2}
 
@@ -390,9 +398,19 @@ The plot above compares the pick/ban ratio of the 25 most-contested heroes with 
 
 This plot clearly supports the hypotheses outlined above. All but one of the supports among the top-25 most-contested heroes (Snapfire, Silencer, Crystal Maiden, Tiny, Clockwerk, Nyx Assassin, Undying, and Marcy) fall to the right of the dashed line. The only "support" to the left is Primal Beast, who is often played as a core and only sometimes as a support. The majority of these supports also sport a low average draft position, with most a majority having been drafted before the 10th pick/ban (Snapfire is the only exception). Meanwhile, *all* the heroes to the left of the dashed line are cores, and most of them averaged a draft position of $>10$. In The International 2022, teams showed a strong propensity to *ban* cores early and *pick* them late, preferring to spend their early picks on supports.
 
-## 2.3 Win Rates of Most Contested Heroes
+### 2.2.c Hero Versatility and Average Draft Position
+
+I believe that Dota 2 is a complicated and well-balanced enough game that the power of *individual heroes* matters less than *overall team composition and strategy.* Very few heroes, if any, heroes are so OP that they cannot be countered by a good strategy. Because of this, I expect *versatility* to matter as much, if not more, than the perceived *power* of a given hero early in the draft. By picking a hero that can be played in multiple roles, a team reveals less information about their draft to their opponent, giving the latter less opportunity to counter their strategy. I therefore expect professional teams to show a tendency to pick versatile heroes early and save their less-versatile heroes for later picks, giving the opponent has fewer chances to counter them. Overall, then, *supports* and *versatile heroes* should dominate the early picks of the draft, while less-versatile Win Condition heroes should come later.
+
+The graphic above suggests this was a common strategy for pro teams in TI 2022. Many of the heroes with an average draft position of $<10$ are *either* almost-exclusively played as supports *or* are commonly played in more than one position. The only exceptions are Visage, Broodmother, and Enigma - three of the most successful frequently-picked heroes in the tournament. Meanwhile, the majority of those with an average draft position $>10$ are *both* cores *and* overwhelmingly played in a single role, usually position 1. The only exceptions are Pangolier, Snapfire, and Batrider, none of whose average draft position is especially high. Overall, then, pro teams tended to (a) *pick* supports and *ban* supports early and (b) favor *flexible* heroes early while reserving less-versatile heroes later, at least when it came to the most-contested heroes of the tournament.
+
+## 2.3 To Pick or to Ban? The Complexities of Draft Strategy
 
 Let's assume for now that the theory behind banning cores early and picking them late while picking supports early is sound (if I have time later, I'll put that question in the crosshairs). Even if so, did pros identify the *right* cores to ban vs. those to let through? Did they, in other words, successfully differentiate the cores that were most difficult to deal with from those who *could* be dealt with? If they did, we should expect the cores in the lower-left quadrant of the plot above to have a *higher* win rate than the cores in the lower-right quadrant. Let's see if that was the case.
+
+### 2.3.a Pick/Ban Rate vs. Win Rate for High-Priority Cores
+
+The chart below compares the number of picks (dark blue bar) with the number of bans (light blue bar) for the six cores that fit the description above (average draft position $< 10$). They are listed in order of win rate, with the most-successful core (Broodmother 65\% win rate) on top and the least successful core (Primal Beast, 47\% win rate) on bottom. These numbers tell a mixed story. On the one hand, all but two of the heroes (Shadow Fiend and Primal Beast) boast a 50-plus percent win rate *despite* usually being picked early enough to give the opponent many opportunities to counter them. If a Win Condition hero is so strong that it regularly wins even *after* opponents have maximal opportunity to counter it, it seems to make sense to simply ban it. And, for all of the heroes above except Leshrac and Shadow Fiend, this is exactly what pro teams tended to do.
 
 ```{r echo = FALSE, fig.height = 3.2}
 
@@ -435,8 +453,6 @@ all_drafts %>%
 
 ```
 
-The chart above compares the number of picks (dark blue bar) with the number of bans (light blue bar) for the six cores that fit the description above (average draft position $< 10$). They are listed in order of win rate, with the most-successful core (Broodmother 65\% win rate) on top and the least successful core (Primal Beast, 47\% win rate) on bottom. These numbers tell a mixed story. On the one hand, all but two of the heroes (Shadow Fiend and Primal Beast) boast a 50-plus percent win rate *despite* usually being picked early enough to give the opponent many opportunities to counter them. If a "win condition" hero is so strong that it regularly wins even *after* opponents have maximal opportunity to counter it, it makes sense to just ban it. And, for all of the heroes above except Leshrac and Shadow Fiend, this is exactly what pro teams tended to do.
-
 ```{r echo = FALSE, results = 'hide', message = FALSE}
 
 ## Code by which I obtained statistics in following paragraph
@@ -455,11 +471,25 @@ all_drafts %>%
 
 ```
 
-However, the chart above also casts doubt on some aspects of pros' pick/ban prioritization. For one thing, the *most* successful hero in the tournament (support or core), Broodmother, was only picked 40 times overall and only banned 104 times. It was therefore neither picked nor banned in over one-third of all games despite its overwhelming win rate. Meanwhile, Primal Beast was banned in more than one-half of all games (125 times total) and picked in 67 others. The vast majority of these bans (114) and picks (59) took place in the first phase. Teams seemed to fear Primal Beast more than any other core, as no other core was banned so often in the first phase. Yet, in those games when Primal Beast *did* get through, the team that picked Primal Beast only wound up winning 47.8\% of the time. Leshrac, on the other hand, was banned only 72 times in total, with only 40 of these bans coming in the first phase. That is, Leshrac was about half as likely as Primal Beast to be banned overall and about one-third as likely to be banned in the first phase. Yet, Leshrac ended the tournament with a 57.14\% win rate despite usually being picked in the first phase (52 first-phase picks out of 77 total). These statistics seem to suggest that teams may have benefited from banning Leshrac instead of Primal Beast, and certainly should have picked/banned Broodmother more often.
+However, the chart above also casts doubt on some aspects of pros' pick/ban prioritization. For one thing, the *most* successful hero in the tournament (support or core), Broodmother, was only picked 40 times overall and only banned 104 times. It was therefore neither picked *nor* banned in over one-third of all games despite its overwhelming win rate. Meanwhile, Primal Beast was banned in more than one-half of all games (125 times total) and picked in 67 others. The vast majority of these bans (114) and picks (59) took place in the first phase. In fact, teams seemed to fear Primal Beast more than *any* other core, as no other core was banned so often in the first phase. Yet, in those games when Primal Beast *did* get through, the team that picked Primal Beast only wound up winning 47.8\% of the time. Contrast this with Leshrac, who was banned only 72 times in total, and only 40 times in the first phase. Put another way, this means Leshrac was only about *half* as likely as Primal Beast to be banned overall and about one-third as likely to be banned in the first phase. Yet, Leshrac ended the tournament with a 57.14\% win rate *despite* usually being picked in the first phase (52 first-phase picks out of 77 total). These statistics seem to suggest that teams may have benefited from picking/banning Leshrac instead of Primal Beast, and certainly should have picked/banned Broodmother more often.
 
-Of course, the draft is more complicated than this. For one thing, draft order matters a *lot.* For instance, the team that picks first gets a single pick, while the next team gets two picks in a row. The second team might therefore choose to let *multiple* overpowered heroes through on purpose, conceding one to their rivals in order to get two themselves. And, of course, the team with first pick has little incentive to ban whatever hero they think is the *most* powerful because they'd rather pick it. On top of this, because bans are limited, there is always an opportunity cost to banning a given hero - banning *that* hero necessarily means *some other* hero, potentially a very strong one, has to be let through. And, of course, each team's will have their own style and their players will have certain heroes they are better and worse with. These factors could be more important than the innate skills and abilities of the heroes themselves. Because of this, we can't decisively conclude from the numbers above that teams were *wrong* to ban Primal Beast while letting Leshrac through. But we *can* test that hypothesis more directly by looking at the matches where precisely that happened.
+#### 2.3.b Banner and Picker Win Rates for Most-Picked Cores, Early Draft Phases
 
-One way of trying to get a clearer picture of this issue is to look at whether *banning* Leshrac and Broodmother and *not banning* Primal Beast in the first phase was really the right way of dealing with these heroes. It might seem straightforward, when looking at those heroes' *general* win rates, to conclude that teams should have banned Leshrac and let Primal Beast through. But in fact, the data strongly suggests the solution is not so simple. As it turns out, the win rate of teams who banned Primal Beast was 61.6\%, while the win rate of teams who banned Leshrac was only 47.2\% and the win rate of teams that banned Broodmother was a dismal 41.3\%.
+But, as it turns out, the draft is more complicated than this. Consider, for instance, the dynamics of the draft order hinted at in Section 2.1.b. For convenience, here is the table showing the draft order again.
+
+\begin{table}[h]
+    \begin{tabular}{m{8mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}m{2mm}m{2mm}|m{2mm}m{2mm}}
+                              & \multicolumn{4}{c}{Ban 1}  &  \multicolumn{4}{c}{Pick 1}  & \multicolumn{6}{c}{Ban 2}  &  \multicolumn{4}{c}{Pick 2}  & \multicolumn{4}{c}{Ban 3}  &  \multicolumn{2}{c}{Pick 3}\\
+      \hline
+      Team & A & B & A & B & A & B & B & A & A & B & A & B & A & B & B & A & A & B & A & B & A & B & A & B\\
+    \end{tabular}
+\end{table}
+
+As I mentioned in Section 2.1.b., the team that picks first gets a single pick, while the next team gets two picks in a row. But before this each team gets two bans. This apparently simple procedure is pregnant with complexity. Each team will have its own idea of which heroes are most to be feared if picked by the other team, and therefore have an incentive to ban them. But what if *they* want some of those *same* heroes? Erring on the side of allowing *more* of those heroes through guarantees that a team gets at least one or two of those heroes themselves, but at the cost of allowing the other team to get *their* high-priority hero(es) too. Erring a side of allowing *fewer* of those heroes through comes at the opposite risk of depriving one's own team of their best hero(es). On top of this, because bans are limited, there is always an opportunity cost to banning a given hero - banning *that* hero necessarily means *some other* hero, potentially a very strong one, has to be let through. And, of course, each team will have their own style and their players will have certain heroes they are better and worse with. These factors could be more important than the innate skills and abilities of the heroes themselves.
+
+Because of this, we cannot yet conclude from the numbers mentioned in the previous sub-section that teams were *wrong* to ban Primal Beast, let Leshrac through, and fully ignore Broodmother in over half of matches. But we can come closer to answering that question more directly by looking at the matches where these things *did* happen.
+
+Does the fact that Leshrac and Broodmother had very high win rates and Primal Beast a relatively low win rate imply that *banning* Leshrac and Broodmother and *not banning* Primal Beast was the right way of dealing with these heroes? I thought so before I looked at the numbers. But in fact, the data strongly suggests the solution was not so simple. As it turns out, the win rate of teams who banned Primal Beast was 61.6\%, while the win rate of teams who banned Leshrac was only 47.2\% and the win rate of teams that banned Broodmother was a dismal 41.3\%. In other words, teams that *picked* Leshrac and/or Broodmother tended to win while teams, but teams that *banned* those heroes also tended to lose. Likewise, teams that *picked* Primal Beast tended to lose while those that banned it tended to win.
 
 ```{r echo = FALSE, message = FALSE, fig.height = 3.2}
 
@@ -510,9 +540,14 @@ all_drafts %>%
 
 ```
 
-The chart above compares the win rate of teams who *banned* Broodmother, Leshrac, or Primal Beast (red bars) in the first (light red) or second (dark red) banning phase of the draft with the win rate of teams who *picked* those heroes (green bars) in the first (light green) or second (dark green) picking phase. The dashed line represents a 50\% win rate. Surprisingly, the red bars for Broodmother and Leshrac are *lower* than the dashed line, which means teams that banned those hero in the 1st/2nd phase were more likely to lose than win - often a *lot* more likely - despite the tendency of teams who *picked* those heroes to win. The opposite is true for Primal Beast. Teams who *banned* Primal Beast in the first phase were *much* more likely to win than lose, despite the fact that teams that picked were more likely to lose than win (I decline to draw any conclusions from Primal Beast's 2nd/3rd phase stats because eight games is too small a sample size for reliable inference). The single most shocking statistic in this chart is the relationship between banning vs. picking Broodmother in the 2nd phase. Broodmothers picked in the 2nd phase won an incredible 79\% of their games, yet teams who *banned* Broodmother in the 2nd phase still lost a whopping 60\% of the games in which they did so.
+The chart above compares the win rate of teams who *banned* Broodmother, Leshrac, or Primal Beast (red bars) in the first (light red) or second (dark red) banning phase of the draft with the win rate of teams who *picked* those heroes (green bars) in the first (light green) or second (dark green) picking phase. The dashed line represents a 50\% win rate. Surprisingly, the red bars for Broodmother and Leshrac are *lower* than the dashed line, which means teams that banned those hero in the 1st/2nd phase were more likely to lose than win - often a *lot* more likely - despite the tendency of teams who *picked* those heroes to win. The opposite is true for Primal Beast. Teams who *banned* Primal Beast in the first phase were *much* more likely to win than lose, despite the fact that teams that picked were more likely to lose than win (I decline to draw any conclusions from Primal Beast's 2nd/3rd phase stats because eight games is too small a sample size for reliable inference). The single most shocking statistic in this chart is the relationship between banning vs. picking Broodmother in the 2nd phase. Broodmothers picked in the 2nd phase won an incredible 79\% of their games, yet teams who *banned* Broodmother in the 2nd phase still lost a whopping 60\% of the games in which they did so. I believe with that we've found our first surprising, interesting, and meaningful insights into the draft process for the International 2022.
 
-How can we explain this seemingly bizarre finding? Perhaps the answer can be found by making our analysis even *more* granular, and looking at the specific *pick order,* rather than *draft phases.* As I mentioned earlier, in TI 2022, the team that picked first had to wait for the opponents to pick twice before they got to pick again. Maybe the reason banning Primal Beast was a good idea while banning Broodmother and/or Leshrac was not had to do with the dynamics of the first phase, where one could argue it was better to let several overpowered heroes through in order to guarantee either that *your* team got the *most* overpowered hero (this seems to make the most sense for first-pick teams) or that your team got *two* overpowered heroes while the other team only got one (this seems to makes the most sense for second-pick teams). Let's break the data for these three heroes down further and see if we can test these hypotheses.
+* **Finding One:** Just because a hero is OP doesn't mean you should first-ban it.
+* **Finding Two:** Just because a hero isn't OP doesn't mean you shouldn't first-ban it.
+
+#### 2.3.c Early Draft Phase Win Rates for Most-Contested Heroes Overall
+
+How can we explain this seemingly bizarre finding? Perhaps the answer can be found by making our analysis more granular. Let's try looking at the specific *pick order,* rather than *draft phases.* As I mentioned earlier, in TI 2022, the team that picked first had to wait for the opponents to pick twice before they got to pick again. Maybe the reason banning Primal Beast was a good idea while banning Broodmother and/or Leshrac was not had to do with the dynamics of the first phase, where one could argue it was better to let several overpowered heroes through in order to guarantee either that *your* team got the *most* overpowered hero (this seems to make the most sense for first-pick teams) or that your team got *two* overpowered heroes while the other team only got one (this seems to makes the most sense for second-pick teams). Let's break the data for these three heroes down further and see if we can test these hypotheses.
 
 ```{r echo = FALSE, message = FALSE, results = 'hide'}
 
@@ -707,10 +742,259 @@ most_contested_supports %>%
           , legend.text = element_text(color = "grey25")
           )
   
+```
+
+Above is a chart showing the draft position and picker/banner win rate for the 10 most-picked cores (top) and the 10 most-picked supports (bottom) through the end of the first picking phase. The chart hints at the first-pick disadvantage, as only a few heroes (Shadow Fiend, Enigma, Nyx Assassin, and Enchantress) sport win rates over 50\% when picked first (lightest-green bar). Of these, Enchantress was only first-picked four times so it is tough to tell whether that number accurately approximates the true prospective win rate for that hero picked in that position. A very different pattern holds for 4th pick, where 7 of the top 10 most-picked cores and 6 out of 8 supports (two were never picked 4th) won at least 50\% of the matches in which they were picked in that position. The average result for the most-picked cores/supports in the 2nd-3rd slot fell in-between these two extremes, with 4 of 7 cores (3 never picked 2nd/3rd) and 5 of 10 supports winning at least 50\% of the matches in which they were picked 2nd or 3rd. Another way of intuiting this relationship is to simply look at the lengths of the three green bars for each hero. While there are some exceptions, in general, the lightest-green bar is the shortest, meaning the hero had a higher win rate when picked 2nd-4th than 1st. While not as striking as Findings One and Two, this trend is clear enough to warrant writing it down as Finding Three.
+
+* **Finding Three:** *When* heroes are picked matters at least as much as *which* heroes are picked.
+
+### 2.3.d Average Win Rate by Draft Phase for Most-Contested Heroes
+
+So far, we've been focusing primarily on the early draft phases. Our findings have been interesting. They are as follows:
+
+* **Finding One:** Just because a hero is OP doesn't mean you should first-ban it.
+* **Finding Two:** Just because a hero isn't OP doesn't mean you shouldn't first-ban it.
+* **Finding Three:** *When* heroes are picked matters at least as much as *which* heroes are picked.
+
+Since Finding Three suggests that *when* heroes are picked matters at least as much as *which* heroes are picked, I am now curious to trace the win rates of the most-contested cores and supports through the entire draft and identify the picks at which those heroes were most/least successful. I would love to do this round-by-round, but when I looked at the data I realized too few heroes had been picked at each specific draft position enough times to give a decent sample size. This means that, frustratingly, we can't get as clear an answer as we'd like to the question, "Was there an *optimal* time to draft each hero, and *when* might that time have been?" But, hey, *c'est la statistique.* What we *can* do is cast a bit of a wider net and examining the win rate of heroes picked during the different *phases* of the draft, which is what I've done below for both the most-picked cores and the most-picked supports.
+
+```{r echo = FALSE, message = FALSE, fig.height = 3.2}
+
+most_contested_cores %>%
+  filter(is_pick == TRUE) %>%
+  mutate(order = factor(case_when(order %in% 5:8 ~ "P1", order %in% 15:18 ~ "P2"
+                                  , order %in% 23:24 ~ "P3"
+                                  )
+                      , levels = c("P1", "P2", "P3")
+                      )
+        ) %>%
+  group_by(hero_name, order) %>%
+  summarize(total_matches = n(), win_rate = mean(result)) %>%
+  
+  ggplot(mapping = aes(x = order, y = win_rate, color = hero_name)) +
+    geom_point(size = 2) +
+    geom_text(mapping = aes(x = order, y = win_rate, label = total_matches
+                            , vjust = 1.8), size = 3, color = "grey25") +
+    xlab("Draft Phase") +
+    ylab("Win Rate") +
+    ylim(0, 1) +
+    geom_hline(yintercept = 0.5, linetype = 2, color = "grey75") +
+    guides(color = guide_legend(title = "Hero")) +
+    labs(title = "Cores") +
+    theme(panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          , plot.title = element_text(color = "grey25", hjust =  0.5)
+          , legend.position = "none"
+          ) +
+    facet_wrap(~ hero_name, nrow = 2)
+  
+most_contested_supports %>%
+  filter(is_pick == TRUE) %>%
+  mutate(order = factor(case_when(order %in% 5:8 ~ "P1", order %in% 15:18 ~ "P2"
+                                  , order %in% 23:24 ~ "P3"
+                                  )
+                      , levels = c("P1", "P2", "P3")
+                      )
+        ) %>%
+  group_by(hero_name, order) %>%
+  summarize(total_matches = n(), win_rate = mean(result)) %>%
+  
+  ggplot(mapping = aes(x = order, y = win_rate, color = hero_name)) +
+    geom_point(size = 2) +
+    geom_text(mapping = aes(x = order, y = win_rate, label = total_matches
+                            , vjust = 1.8), size = 3, color = "grey25") +
+    xlab("Draft Phase") +
+    ylab("Win Rate") +
+    ylim(0, 1) +
+    geom_hline(yintercept = 0.5, linetype = 2, color = "grey75") +
+    guides(color = guide_legend(title = "Hero")) +
+    labs(title = "Supports") +
+    theme(panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          , plot.title = element_text(color = "grey25", hjust =  0.5)
+          , legend.position = "none"
+          ) +
+    facet_wrap(~ hero_name, nrow = 2)  
 
 ```
 
-```{r echo = FALSE, message = FALSE, fig.height = 5.75}
+These results surprised me a bit. I expected the Win Condition heroes' win rate to be considerably higher when those heroes were picked in the last phase than in the first phase, but the only two cores whose last-phase win rate was significantly higher than their win rate when picked in earlier phases were Batrider and Broodmother. The pros must have realized this, as these were two of the most-banned heroes in the tournament overall (Batrider banned 115 times, Broodmother banned 104 times) with most of those bans coming in the latter two banning phases (Batrider = 102 late-phase bans, Broodmother = 59 late-phase bans). One might wonder whether this effort was really necessary for Batrider, whose overall win rate of 20\% was abysmal and whose win rate even when picked in the final phase was still less than 50\%. However, teams that banned Batrider still won 53.9\% of the time, so yet again we are faced with a situation in which a hero with a low win rate when picked may very well still be worth spending a ban on. Broodmother's statistics, on the other hand, seem to suggest that she was the ultimate "gotcha" pick in TI 2022, with an incredible win rate of nearly 75\% when picked in the 2nd or 3rd picking phase. The other hero whose stats seem worth mentioning is Morphling. Going into the tournament, Morphling was considered one of the strongest carries in the patch and *especially* good in the late phases if the matchup was right. However, Morphling's win rate was actually much lower when picked in the last phase (25\%) than when picked in the first two phases (around 50\%). Apart from these three heroes, the rest of the most-picked cores' win rate hovered around 50\% no matter what phase they were picked in.
+
+A similar story was true of the most-picked supports, though fewer of them were picked in the last phase of the draft than the cores, which offers more, ahem, *support* to my early hypothesis that supports would be picked early in the draft while Win Conditions would more frequently be picked later. The most noteworthy heroes here seem to be Nyx Assassin and Tiny. Nyx is significant because its win rate was excellent no matter which phase it was banned in, whereas Tiny's win rate fluctuation resembles that of Morphling. Of the "supports," Tiny was picked most in the last phase, which makes sense because while he was played as a support most often in TI 2022, he is often played as a core. That being said, we can perhaps see *why* teams chose to play him as a support rather than a Win Condition hero since his win rate when picked last was a rather disappointing 30\%.
+
+Let's round this analysis off by looking at the success rate of teams that *banned* these most-contested heroes in the various draft phases.
+
+```{r echo = FALSE, message = FALSE, fig.height = 3.2}
+
+most_contested_cores %>%
+  filter(is_pick == FALSE) %>%
+  mutate(order = factor(case_when(order %in% 1:4 ~ "B1", order %in% 9:14 ~ "B2"
+                                  , order %in% 19:22 ~ "B3"
+                                  )
+                      , levels = c("B1", "B2", "B3")
+                      )
+        ) %>%
+  group_by(hero_name, order) %>%
+  summarize(total_matches = n(), win_rate = mean(result)) %>%
+  
+  ggplot(mapping = aes(x = order, y = win_rate, color = hero_name)) +
+    geom_point(size = 2) +
+    geom_text(mapping = aes(x = order, y = win_rate, label = total_matches
+                            , vjust = 1.8), size = 3, color = "grey25") +
+    xlab("Draft Position") +
+    ylab("Win Rate") +
+    ylim(0, 1) +
+    geom_hline(yintercept = 0.5, linetype = 2, color = "grey75") +
+    guides(color = guide_legend(title = "Hero")) +
+    labs(title = "Cores") +
+    theme(panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          , plot.title = element_text(color = "grey25", hjust =  0.5)
+          , legend.position = "none"
+          ) +
+    facet_wrap(~ hero_name, nrow = 2)
+  
+most_contested_supports %>%
+  filter(is_pick == FALSE) %>%
+  mutate(order = factor(case_when(order %in% 1:4 ~ "B1", order %in% 9:14 ~ "B2"
+                                  , order %in% 19:22 ~ "B3"
+                                  )
+                      , levels = c("B1", "B2", "B3")
+                      )
+        ) %>%
+  group_by(hero_name, order) %>%
+  summarize(total_matches = n(), win_rate = mean(result)) %>%
+  
+  ggplot(mapping = aes(x = order, y = win_rate, color = hero_name)) +
+    geom_point(size = 2) +
+    geom_text(mapping = aes(x = order, y = win_rate, label = total_matches
+                            , vjust = 1.8), size = 3, color = "grey25") +
+    xlab("Draft Position") +
+    ylab("Win Rate") +
+    ylim(0, 1) +
+    geom_hline(yintercept = 0.5, linetype = 2, color = "grey75") +
+    guides(color = guide_legend(title = "Hero")) +
+    labs(title = "Supports") +
+    theme(panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          , plot.title = element_text(color = "grey25", hjust =  0.5)
+          , legend.position = "none"
+          ) +
+    facet_wrap(~ hero_name, nrow = 2)
+
+```
+
+Let's start by looking at the cores again. Batrider and Broodmother are once more worth mentioning. Batrider's graph illustrates the curious relationship I mentioned, where teams that banned him won consistently even though teams that picked him also *lost* consistently. The inverse is true for Broodmother, whose picking teams consistently won yet teams that banned it consistently lost. The trends for Faceless Void and Beastmaster seem interesting, too. Though both heroes were among the most-contested heroes overall, neither was usually picked or banned early in the draft, indicating that teams considered these heroes to be very strong *situationally,* but only in the right matchup. However, teams seemed better at identifying *which* matchups were ideal for Beastmaster than for Void. We can see this in the upward trajectory of the win rate for *both* teams that picked Beastmaster in the later phases of the draft *and* those that banned him. The opposite is true for Void, whose win rate went down in later draft phases for both picking and banning teams. The last core whose banning stats seem interesting is Pangolier. Teams that banned Pangolier tended to win no matter which phase they banned him in, even though his overall win rate was a modest 49.3\%.
+
+As for supports, the comparatively small number of bans once again suggests pro teams were more worried about preventing the other team from picking a game-winning core than a support later in the draft. Apart from that, only a few numbers really seem interesting. First, banning Tiny seems to have been a reasonably strong move in the early phases but not in the later phases. This makes sense if, as the analysis above suggests, Tiny was better as a flexible early support pick than a Win Condition. Elsewhere, banning Snapfire in the early phases seems to have been ill-advised, which again makes sense given the hero's 47.3\% overall win rate when picked. Finally, teams on the whole seemed to overvalue Enchantress. She was picked in Phase 1 or 2 a total of 31 times and banned in Phase 1 or 2 a further 29 times, yet her win rate when picked in these phases was only 45.2\% and the win rate of teams banning her in these phases was even worse at 37.9\%. While she did win 75\% of the matches in which she was picked in the final phase, the sample size of just four matches suggests we oughtn't put too much stock in the idea that she was a good "gotcha" pick.
+
+### 2.3.e Conclusions Regarding Draft Strategy for Most-Contested Heroes
+
+These analyses have given us a mixture of expected and unexpected results. The trends that seem most interesting to me are as follows:
+
+* Heroes with a high *win* rate when *picked* also very often have a high *loss* rate when *banned.*
+* A large majority of the most-contested heroes had a much lower win rate when picked first overall than when picked later in the draft.
+* The most consistently successful heroes were Nyx Assassin, Leshrac, and Broodmother.
+  + Nyx was successful no matter when picked and spending a ban on him did not correlate with a higher loss rate.
+  + Leshrac was extremely successful when picked later than 1st overall, but banning him in the first phase was not consistently a winning strategy.
+  + Broodmother was extremely successful when picked later than 3rd overall, but banning him was not consistently a winning strategy in any phase of the draft.
+
+While interesting, these trends are very far from revealing which heroes were the most powerful overall in TI 2022 or what draft strategy was the best. In fact, I would argue that the only concrete pieces of guidance that have emerged from this analysis so far are (a) if you had the first overall pick of the draft and a player who was good at playing Nyx Assassin, you should first-pick him, and otherwise you should ban him, and (b) you shouldn't bother spending early-phase bans on Snapfire or Enchantress. Apart from that, the complicated relationship between draft position, picker win rate, and banner win rate for the rest of the most-contested heroes is simply too complicated to offer clear-cut advice about which heroes to pick at which times.
+
+While this analysis may not have provided us with a "solution" to the TI 2022 draft, however, I believe it *does* suggest a very valuable and useful conclusion. This conclusion is simply that, when it came to draft strategy, *the unique circumstances of each individual match mattered more than the strength/weakness of the specific heroes in the meta.* Yes, Broodmother and Leshrac were very strong, but the poor success rate of teams that picked those heroes too early or simply banned them meant no generally applicable strategy could be used to deal with those heroes in an easy or straightforward way. Instead, bans and picks ought to be based on the particular circumstances of a given match.
+
+And, in fact, this seems to be exactly the route taken by the champion and best team of the tournament, Tundra E-Sports, by the time the championship match rolled around. Tundra banned Nyx Assassin in the first phase of every game, but apart from that their bans and picks varied enormously. In fact, the only pick they repeated at all in the three games that together comprised the match was Mirana, which they picked in the first phase of games one and three. Their picks and bans did not seem to be extraordinarily influenced by the overall win rate of the heroes in the tournament, though undoubtedly they had access to that data. For instance, prior to the finals, Leshrac had a daunting 59.5\% win rate overall and even higher 63.3\% win rate when picked in the first phase. However, rather than either banning or first-picking him, Tundra let him through in every draft and even passed up the opportunity to pick him when given the opportunity in game 3, instead, picking Tiny and Mirana in the 2nd-3rd pick slots and thus allowing Secret to draft Leshrac in the 4th slot. They also declined to pick Broodmother in the third match despite its being available through all phases, choosing Beastmaster as their offlaner at the end of the second picking phase. I am not saying this draft strategy is solely responsible for Tundra winning TI 2022. It is conceivable that their skill level was so high that draft strategy had little to do with their winning the tournament. But their draft strategy was right in line with what the statistical analysis I've done so far suggests was the right approach, and I am inclined to believe that Tundra's grasp of the draft meta is part of the reason they won the tournament.
+
+# Part Three: The Evolution of the Meta During TI 2022
+
+What I've provided so far is a statistical analysis of The International 2022 *as a whole.* But recall what I wrote in the introduction:
+
+> "Because Dota is so complex, it is not easy even for the pros to discover a 'dominant' strategy or set of strategies. Doing so requires teams to play a large number of matches in a given patch. Moreover, professional teams have an incentive to hide the strategies they think are the best from other pro teams until they compete in a prestigious tournament since the element of surprise is so valuable. Because of its immense prestige, elite skill level and enormous prize pool, The International offers the most likely scene for the most-dominant strategies to be developed and/or unveiled."
+
+I firmly believe The International is the ultimate testing ground for any given meta in Dota 2. At no other point do teams have such a huge incentive to refine their skills and develop their ideas about which team compositions, item builds and gameplay strategies are the best. Of course, this means teams will spend a *lot* of time theorizing, practicing, scrimmaging, and otherwise preparing for the tournament,^[Teams often "bootcamp," i.e. live together in a house near the location of the tournament preparing and practicing, for over a month.] but no amount of theorizing or practicing can yield as reliable a test of ideas as actually playing a match against another competitive team for high stakes. For similar reasons, no matter how much preparation they have done beforehand, teams' ideas of the game are bound to evolve rapidly over the course of the tournament as they encounter for the first time the ideas of other teams under high-stakes conditions. The upshot of all this is that the meta for every International is a rapidly evolving thing. Because of this, analyzing the evolution of *trends over time* is likely to be at least as interesting as analyzing the aggregate trends over the course of the tournament as a whole, if not even more so. By looking at those trends, we can get a glimpse into the minds of the pros and see how their ideas of the comparative strength of different heroes changed as a result of their experience in the tournament and exposure to the ideas of other teams. That is what I aim to do in this section.
+
+## 3.1 Explanation of Tournament Phase Classification
+
+Before launching into the analysis, a few words need to be said about the format of the tournament in order to explain how I've decided to break it up into phases. The International 2022 took place over the course of several weeks. The Group Phase lasted four days and involved 183 total matches. Players then had several days to rest before moving on to the Main Event, which was a double-elimination tournament. Most of this double-elimination tournament took place over the course of five consecutive days, after which a six-day break was taken before the final four teams faced off to decide the tournament winner as a whole.
+
+I expect the meta to have evolved continually throughout the tournament. Because of this, and because each individual matchday in the Group Stage represents a relatively large number of matches, I will analyze the evolution in the meta for each day during the Group Stage (matchdays 1-4). However, I expect the biggest adaptations in the meta to occur between the Group Phase and the Main Event. Before this, teams will have been playing a lot of games in quick succession, giving them less time to study and adapt to overall trends. Many will have also wanted a relatively large number of Group Stage matches to test their ideas before jumping ship and trying other things. Since there are so few matches during each individual day of the Main Event compared to the Group Stage, however, I will treat the Main Event (matchdays 5-8) as a phase unto itself, and will not spend much time analyzing trends that evolve over the course of the Main Event.
+
+You may notice that this sums up to only 8 matchdays, whereas TI 2022 included 10 matchdays in total. This is because the odd format of the Main Event presents some difficulties as an analyst studying the evolution of trends over time. The main difficulty is that the six-day gap between the first part of the Main Event and the second part (with the final four teams) offered teams *much* more time to study and adapt to the meta, as well as to prepare for their specific opponents, than teams had in earlier rounds. On the one hand, this would allow them to evolve the meta in a more refined way, but on the other hand their refinements may be so finely tuned to their particular opponents as to not be indicative of a *change in the meta* so much as an *adaptation to their specific opponents.* Because of this, I will focus primarily on matchdays 5-8 as the Main Event phase of analysis, though if I have time I will also add matchdays 9-10 for the sake of comparison.
+
+Overall, then, the units of analysis I will study will be as follows:
+* **Group Stage:** Group Stage Days 1-4
+* **Matchday 1:** Group Stage Day 1
+* **Matchday 2:** Group Stage Day 2
+* **Matchday 3:** Group Stage Day 3
+* **Matchday 4:** Group Stage Day 4
+* **Matchdays 5-8:** Main Event Days 1-4 
+* **Matchdays 5-10:** Main Event Days 1-6
+
+```{r eval = FALSE, results = 'hide', echo = FALSE, fig.height = 3.2}
+
+all_drafts %>%
+  filter(order == 1 & matchday %in% 9:12) %>%
+  summarize(n())
+
+all_drafts %>%
+  filter(hero_name == "Morphling", is_pick == TRUE) %>%
+  group_by(order) %>%
+  summarize(total_matches = n(), win_rate = mean(result))
+
+all_drafts %>%
+  filter(hero_name == "Batrider", is_pick == FALSE) %>%
+  summarize(total_matches = n(), win_rate = mean(result))
+
+all_drafts %>%
+  group_by(hero_name) %>%
+  filter(n() > 90) %>%
+  summarize(appearances = sum(is_pick), bans = (n() - sum(is_pick))
+            , picker_win_rate = (sum(result[which(is_pick == 1)])/sum(is_pick))
+            , banner_win_rate = (sum(result[which(is_pick == 0)])/sum(is_pick))
+            ) %>%
+  arrange(desc(appearances)) %>%
+
+  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
+    geom_bar(mapping = aes(x = appearances)
+             , stat = "identity", fill = "powderblue"
+             ) +
+    geom_bar(mapping = aes(x = appearances*picker_win_rate)
+             , stat = "identity", fill = "lightsalmon4"
+             ) +
+    geom_text(mapping = aes(x = appearances, label = appearances, hjust = 1.3,
+                            vjust = 0.45
+                            )
+              , size = 2.4
+              ) +
+    geom_text(mapping = aes(x = picker_win_rate*appearances
+                            , hjust = 1.1, vjust = 0.45,
+                    label = paste0(picker_win_rate * appearances, " ", "(",
+                                  percent(picker_win_rate, .1), ")"
+                                   )
+                            ), color = "white", size = 2.4
+              ) +
+    theme(legend.position = "none"
+          , panel.background = element_rect(fill = "white", color = "grey75")
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          ) +
+    labs(x = "Wins (Win Rate) vs Total Appearances", y = NULL)
+
+```
+
+```{r eval = FALSE, results = 'hide', echo = FALSE, message = FALSE, fig.height = 5.75}
 
 most_contested %>%
   group_by(hero_name) %>%
@@ -754,46 +1038,5 @@ most_contested %>%
           , legend.title.align = 0.5
           , legend.text = element_text(color = "grey25")
           )
-
-```
-
-These results seem truly perplexing. Just how perplexing can be shown by boiling down their chief implication to a single sentence: In the International 2022, banning the most-successful heroes was, on average, a *losing strategy.*
-
-```{r echo = FALSE, fig.height = 3.2}
-
-all_drafts %>%
-  group_by(hero_name) %>%
-  filter(n() > 90) %>%
-  summarize(appearances = sum(is_pick), bans = (n() - sum(is_pick))
-            , picker_win_rate = (sum(result[which(is_pick == 1)])/sum(is_pick))
-            , banner_win_rate = (sum(result[which(is_pick == 0)])/sum(is_pick))
-            ) %>%
-  arrange(desc(appearances)) %>%
-
-  ggplot(mapping = aes(y = reorder(hero_name, appearances))) +
-    geom_bar(mapping = aes(x = appearances)
-             , stat = "identity", fill = "powderblue"
-             ) +
-    geom_bar(mapping = aes(x = appearances*picker_win_rate)
-             , stat = "identity", fill = "lightsalmon4"
-             ) +
-    geom_text(mapping = aes(x = appearances, label = appearances, hjust = 1.3,
-                            vjust = 0.45
-                            )
-              , size = 2.4
-              ) +
-    geom_text(mapping = aes(x = picker_win_rate*appearances
-                            , hjust = 1.1, vjust = 0.45,
-                    label = paste0(picker_win_rate * appearances, " ", "(",
-                                  percent(picker_win_rate, .1), ")"
-                                   )
-                            ), color = "white", size = 2.4
-              ) +
-    theme(legend.position = "none"
-          , panel.background = element_rect(fill = "white", color = "grey75")
-          , axis.title.x = element_text(color = "grey25", size = 10)
-          , axis.title.y = element_text(color = "grey25", size = 10)
-          ) +
-    labs(x = "Wins (Win Rate) vs Total Appearances", y = NULL)
 
 ```
