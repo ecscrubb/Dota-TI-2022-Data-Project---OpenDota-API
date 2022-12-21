@@ -38,7 +38,7 @@ ti_11_match_data <- readRDS("ti_11_match_data.RData")
 
 ## Next, I'll call up saved Hero vector to map hero names onto Hero IDs
 
-heroes_raw <- readRDS("hero_map.RData")
+heroes_raw <- GET("https://api.opendota.com/api/heroes")
 heroes <- fromJSON(rawToChar(heroes_raw$content))
 hero_name_map <- heroes %>%
   select(id, localized_name)
@@ -934,13 +934,152 @@ I expect the meta to have evolved continually throughout the tournament. Because
 You may notice that this sums up to only 8 matchdays, whereas TI 2022 included 10 matchdays in total. This is because the odd format of the Main Event presents some difficulties as an analyst studying the evolution of trends over time. The main difficulty is that the six-day gap between the first part of the Main Event and the second part (with the final four teams) offered teams *much* more time to study and adapt to the meta, as well as to prepare for their specific opponents, than teams had in earlier rounds. On the one hand, this would allow them to evolve the meta in a more refined way, but on the other hand their refinements may be so finely tuned to their particular opponents as to not be indicative of a *change in the meta* so much as an *adaptation to their specific opponents.* Because of this, I will focus primarily on matchdays 5-8 as the Main Event phase of analysis, though if I have time I will also add matchdays 9-10 for the sake of comparison.
 
 Overall, then, the units of analysis I will study will be as follows:
+
 * **Group Stage:** Group Stage Days 1-4
 * **Matchday 1:** Group Stage Day 1
 * **Matchday 2:** Group Stage Day 2
 * **Matchday 3:** Group Stage Day 3
 * **Matchday 4:** Group Stage Day 4
-* **Matchdays 5-8:** Main Event Days 1-4 
-* **Matchdays 5-10:** Main Event Days 1-6
+* **Main Event:** Main Event minus final two days
+* **Main Event (full):** Entire Main Event
+
+## 3.2 Hero Pick and Ban Rates Over Time
+
+The first thing I'd like to do is simply visualize which heroes were contested most for each phase of the tournament. This will give us a place to start analyzing how the trends evolved over time.
+
+```{r echo = FALSE, message = FALSE, results = 'hide'}
+
+## Adding factor variable of tournament phases minus final two days to all_drafts dataset
+
+all_drafts_nofinal <- all_drafts %>%
+  filter(matchday %in% 1:8) %>%
+  mutate(tourn_phase = factor(case_when(matchday == 1 ~ "G1", matchday == 2 ~ "G2"
+                                        , matchday == 3 ~ "G3", matchday == 4 ~ "G4"
+                                        , matchday %in% 5:8 ~ "ME"
+                                        )
+                              , levels = c("G1", "G2", "G3", "G4", "ME")
+                              )
+         )
+
+all_drafts_final <- all_drafts %>%
+  mutate(tourn_phase = factor(case_when(matchday == 1 ~ "G1", matchday == 2 ~ "G2"
+                                        , matchday == 3 ~ "G3", matchday == 4 ~ "G4"
+                                        , matchday %in% 5:10 ~ "MEf"
+                                        )
+                              , levels = c("G1", "G2", "G3", "G4"
+                                            , "MEf"
+                                            )
+                              )
+         )
+
+## Doing the same for most-contested cores
+
+mc_cores_nofinal <- most_contested_cores %>%
+  filter(matchday %in% 1:8) %>%
+  mutate(tourn_phase = factor(case_when(matchday == 1 ~ "G1", matchday == 2 ~ "G2"
+                                        , matchday == 3 ~ "G3", matchday == 4 ~ "G4"
+                                        , matchday %in% 5:8 ~ "ME"
+                                        )
+                              , levels = c("G1", "G2", "G3", "G4", "ME")
+                              )
+         )
+
+mc_supports_nofinal <- most_contested_supports %>%
+  filter(matchday %in% 1:8) %>%
+  mutate(tourn_phase = factor(case_when(matchday == 1 ~ "G1", matchday == 2 ~ "G2"
+                                        , matchday == 3 ~ "G3", matchday == 4 ~ "G4"
+                                        , matchday %in% 5:8 ~ "ME"
+                                        )
+                              , levels = c("G1", "G2", "G3", "G4", "ME")
+                              )
+         )
+
+mc_cores_final <- most_contested_cores %>%
+  mutate(tourn_phase = factor(case_when(matchday == 1 ~ "G1", matchday == 2 ~ "G2"
+                                        , matchday == 3 ~ "G3", matchday == 4 ~ "G4"
+                                        , matchday %in% 5:10 ~ "MEf"
+                                        )
+                              , levels = c("G1", "G2", "G3", "G4"
+                                            , "MEf"
+                                            )
+                              )
+         )
+
+mc_supports_final <- most_contested_supports %>%
+  mutate(tourn_phase = factor(case_when(matchday == 1 ~ "G1", matchday == 2 ~ "G2"
+                                        , matchday == 3 ~ "G3", matchday == 4 ~ "G4"
+                                        , matchday %in% 5:10 ~ "MEf"
+                                        )
+                              , levels = c("G1", "G2", "G3", "G4"
+                                            , "MEf"
+                                            )
+                              )
+         )
+
+## Creating coefficient for Group Stage day 4 and Main Event, which had different numbers of total matches than Group Stage days 1-3
+
+all_drafts_nofinal %>%
+  filter(order == 1) %>%
+  group_by(tourn_phase) %>%
+  summarize(total_matches = n())
+
+G4_coeff <- 50/34
+ME_coeff <- 50/36
+
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE, fig.height = 3.2}
+
+mc_cores_nofinal %>%
+  group_by(tourn_phase, hero_name) %>%
+  summarize(total_contestation = n(), picks = sum(is_pick), bans = (n() - sum(is_pick))) %>%
+  mutate(tc_prop = factor(case_when(tourn_phase == "G1" ~ total_contestation/50
+                                    , tourn_phase == "G2" ~ total_contestation/50
+                                    , tourn_phase == "G3" ~ total_contestation/49
+                                    , tourn_phase == "G4" ~ total_contestation/34
+                                    , tourn_phase == "ME" ~ total_contestation/36
+                                      )
+                            )
+            , pick_prop = factor(case_when(tourn_phase == "G1" ~ picks/50
+                                           , tourn_phase == "G2" ~ picks/50
+                                           , tourn_phase == "G3" ~ picks/49
+                                           , tourn_phase == "G4" ~ picks/34
+                                           , tourn_phase == "ME" ~ picks/36
+                                           )
+                                )
+            , ban_prop = factor(case_when(tourn_phase == "G1" ~ bans/50
+                                          , tourn_phase == "G2" ~ bans/50
+                                          , tourn_phase == "G3" ~ bans/49
+                                          , tourn_phase == "G4" ~ bans/34
+                                          , tourn_phase == "ME" ~ bans/36
+                                          )
+                                )
+            ) %>%
+  
+  ggplot(mapping = aes(x = tourn_phase)) +
+    geom_col(mapping = aes(y = tc_prop), fill = "rosybrown2") +
+    geom_col(mapping = aes(y = pick_prop),  fill = "lightgoldenrod1") +
+    geom_text(mapping = aes(y = tc_prop, label = bans)
+              , color = "grey25", size = 2, vjust = 1.7
+              ) +
+    geom_text(mapping = aes(y = pick_prop, label = picks)
+              , color = "white", size = 2, vjust = -0.6
+              ) +
+    labs(x = "Tournament Phase", y = "Proportion of Matches Contested") +
+    theme(panel.background = element_rect(fill = "white"
+                                            , color = "grey75"
+                                            )
+          , axis.title.x = element_text(color = "grey25", size = 10)
+          , axis.title.y = element_text(color = "grey25", size = 10)
+          , axis.text.y = element_blank()
+          , axis.ticks.y = element_blank()
+          , legend.title = element_text(color = "grey25", size = 10)
+          , legend.title.align = 0.5
+          , legend.text = element_text(color = "grey25")
+          ) +
+    facet_wrap(~hero_name, nrow = 2)
+
+```
 
 ```{r eval = FALSE, results = 'hide', echo = FALSE, fig.height = 3.2}
 
